@@ -1,0 +1,68 @@
+https://www.youtube.com/watch?v=buXa1xXWU_U - 15:30 - 20:45 on how to use SysId to calculate FF and PID values
+https://docs.wpilib.org/en/stable/docs/software/pathplanning/trajectory-tutorial/characterizing-drive.html
+https://v6.docs.ctr-electronics.com/en/stable/docs/api-reference/api-usage/signal-logging.html
+
+SysId for Swerve:
+    - https://www.chiefdelphi.com/t/official-sds-mk3-mk4-code/397109/28
+    - https://www.chiefdelphi.com/t/alternatives-to-sysid-for-characterizing-swerve-drive/451717
+    - https://www.chiefdelphi.com/t/any-tips-for-locking-rotation-of-mk4i-swerve-modules-for-feed-forward-characterization-sysid/419622
+    - https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/sysidroutine/subsystems/Drive.java
+        - Will need to modify this for swerve
+        - Ideas:
+            - https://github.com/StuyPulse/SwerveSysId
+
+----------
+Done:
+- Run SysId tests on drive motors on field
+    - Re-run sysid tests using fresh battery (had to adjust voltage reading code, was returning 0 values)
+        - Place robot with wheels all facing forward (bevels on left), ensure front of robot if facing correct direction
+        - Deploy main robot code and start tele-op to reset the encoders (don't move the robot using joystick though)
+        - Deploy sysid code, then run the 4 tests
+        - Grab the .wpilog file from USB drive via SFTP to /U/ drive
+    - Feed logs into SysId tool \FRC\2024\2024 WPILib Tools\SysId 2024
+    - https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/loading-data.html
+    - https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/analyzing-gains.html
+
+TODO:
+- For whatever reason camera 3 and 4 duplicate on reboot of photon2 pi
+- Can temporarily workaround by deleting extras from sqlite file on filesystem, then restart the photonvision app via the GUI
+
+Input:
+    - Exposure and Gain:
+        - Adjust these to achieve good brightness without flicker and low motion blur. This may vary based on lighting conditions in your competition environment
+        - To avoid motion blur issues:
+            - Lower your exposure as low as possible. Using gain and brightness to account for lack of brightness.
+        - For all pipelines, exposure time should be set as low as possible while still allowing for the target to be reliably tracked. 
+            This allows for faster processing as decreasing exposure will increase your camera FPS.
+    - 1280x800 resolution
+    - Mode: 3d
+    - Exposure: 10.1
+    - brightness: 60
+AprilTag:
+    - Tag Family 36h11 (verify 2025 game is using the same family as 2024)
+    - Decimate 2
+    - Blur: 0
+    - Threads: 4 (O PI has 8 cores/threads - so 4 per camera)
+    - Refine Edges: On
+    - Max Error Bits: 2 (maybe test with 3 at some point based on docs)
+    - Decision Margin Cutoff: 30
+    - Pose Iterations: 
+Output:
+    - Show Multiple Targets: Off
+    - Do Multi-Target Estimation: On (This is "Multi-Tag")
+
+- Implement vision simulation
+    - https://docs.photonvision.org/en/v2025.0.0-beta-4/docs/simulation/simulation-java.html
+    - https://github.com/PhotonVision/photonvision/tree/2a6fa1b6ac81f239c59d724da5339f608897c510/photonlib-java-examples/swervedriveposeestsim
+
+- For Krakens, TalonFX current limits:
+    - Default values for 2025
+        Stator current limit of 120 A
+        Supply current limit of 70 A
+        Supply current lower limit of 40 A after limiting (at 70 A) for 1 second
+    - Example codebases:
+        - https://github.com/StuyPulse/Izzi/blob/main/src/main/java/com/stuypulse/robot/subsystems/swerve/modules/KrakenSwerveModule.java
+        - https://github.com/StuyPulse/Izzi/blob/main/src/main/java/com/stuypulse/robot/constants/Motors.java
+
+- We also now have a CTRE Pigeon Gyro
+    - Compare and contrast to Navx
