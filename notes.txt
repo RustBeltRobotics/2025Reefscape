@@ -1,16 +1,8 @@
-https://www.youtube.com/watch?v=buXa1xXWU_U - 15:30 - 20:45 on how to use SysId to calculate FF and PID values
-https://docs.wpilib.org/en/stable/docs/software/pathplanning/trajectory-tutorial/characterizing-drive.html
-https://v6.docs.ctr-electronics.com/en/stable/docs/api-reference/api-usage/signal-logging.html
-
-SysId for Swerve:
-    - https://www.chiefdelphi.com/t/official-sds-mk3-mk4-code/397109/28
-    - https://www.chiefdelphi.com/t/alternatives-to-sysid-for-characterizing-swerve-drive/451717
-    - https://www.chiefdelphi.com/t/any-tips-for-locking-rotation-of-mk4i-swerve-modules-for-feed-forward-characterization-sysid/419622
-    - https://github.com/wpilibsuite/allwpilib/blob/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/sysidroutine/subsystems/Drive.java
-        - Will need to modify this for swerve
-        - Ideas:
-            - https://github.com/StuyPulse/SwerveSysId
-
+2025 TODO:
+    - Update SysId to use FalconFX code for CTRE (doc link in class)
+    - Update code to use Pigeon instead of Navx
+    - Mount pigeon - center of robot with X+ facing front of robot
+    - Define CAN IDs for devices using software
 ----------
 Done:
 - Run SysId tests on drive motors on field

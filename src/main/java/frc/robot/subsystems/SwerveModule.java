@@ -1,13 +1,18 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -44,27 +49,20 @@ public class SwerveModule extends SubsystemBase {
     public static final double STEER_D = 0.0;
     public static final double STEER_FF = 0.0;
 
-    private final SparkMax driveMotor;
+    private final TalonFX driveMotor;
     private final SparkMax steerMotor;
 
-    private SparkClosedLoopController drivePidController;
     private SparkClosedLoopController steerPidController;
-    private final RelativeEncoder driveEncoder;
     private final RelativeEncoder steerEncoder;
 
     private final CANcoder absoluteSteerEncoder;
 
     public SwerveModule(int driveID, int steerID, int encoderID) {
-        // Setup drive motor SparkMax
-        SparkMaxConfig driveMotorSparkMaxConfig = getDriveSparkConfig();
-        driveMotor = new SparkMax(driveID, MotorType.kBrushless);
-        driveMotor.configure(driveMotorSparkMaxConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
-
-        // Setup PID functionality for drive motors
-        drivePidController = driveMotor.getClosedLoopController();
-
-        // Setup drive motor relative encoder
-        driveEncoder = driveMotor.getEncoder();
+        // Setup drive motor TalonFX
+        driveMotor = new TalonFX(driveID);
+        TalonFXConfiguration driveConfig = getDriveTalonFXConfiguration();
+        driveMotor.getConfigurator().apply(driveConfig);
+        driveMotor.setPosition(0);
 
         // Setup steer motor SparkMax
         SparkMaxConfig steerMotorSparkMaxConfig = getSteerSparkConfig();
@@ -83,14 +81,38 @@ public class SwerveModule extends SubsystemBase {
         resetEncoders(); // Zero encoders to ensure steer relative matches absolute
     }
 
-    private SparkMaxConfig getDriveSparkConfig() {
-        SparkMaxConfig driveMotorSparkMaxConfig = new SparkMaxConfig();
-        driveMotorSparkMaxConfig.inverted(Constants.Kinematics.DRIVE_MOTOR_INVERTED).idleMode(IdleMode.kBrake);
-        driveMotorSparkMaxConfig.smartCurrentLimit(Constants.CurrentLimit.SparkMax.SMART_DRIVE).secondaryCurrentLimit(Constants.CurrentLimit.SparkMax.SECONDARY_DRIVE);
-        driveMotorSparkMaxConfig.encoder.positionConversionFactor(Constants.Kinematics.DRIVE_POSITION_CONVERSION).velocityConversionFactor(Constants.Kinematics.DRIVE_VELOCITY_CONVERSION);
-        driveMotorSparkMaxConfig.closedLoop.pidf(DRIVE_P, DRIVE_I, DRIVE_D, DRIVE_FF).iZone(0.0).positionWrappingEnabled(false);
+    private TalonFXConfiguration getDriveTalonFXConfiguration() {
+        TalonFXConfiguration driveConfig = new TalonFXConfiguration();
+        //Drive PIDF values
+        Slot0Configs slot0 = new Slot0Configs();
+        slot0.kS = 0.14304; 
+        slot0.kV = 0.10884; 
+        slot0.kA = 0.023145; 
+        slot0.kP = 0.07; 
+        slot0.kI = 0; 
+        slot0.kD = 0; 
 
-        return driveMotorSparkMaxConfig;
+        driveConfig.Slot0 = slot0;
+        
+        // Direction and neutral mode
+        driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;  //TODO: verify/test this
+        driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+        // Ramp rates
+        driveConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.0;
+        
+        // Gear ratio
+        driveConfig.Feedback.SensorToMechanismRatio = 1.0; // 1:1 sensor to mechanism ratio
+
+        // Current limits
+        driveConfig.CurrentLimits.StatorCurrentLimit = 120; // 120A stator current limit
+        driveConfig.CurrentLimits.StatorCurrentLimitEnable = true; // Enable stator current limiting
+
+        driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = +400; // 40A peak forward torque current
+        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -400; // 40A peak reverse torque current
+        driveConfig.TorqueCurrent.TorqueNeutralDeadband = 0.05; // 5% torque neutral deadband
+
+        return driveConfig;
     }
 
     private SparkMaxConfig getSteerSparkConfig() {
@@ -110,7 +132,7 @@ public class SwerveModule extends SubsystemBase {
 
     /** @return Drive position, meters, -inf to +inf */
     public double getDrivePosition() {
-        return driveEncoder.getPosition();
+        return driveMotor.getPosition().getValueAsDouble() * Constants.Kinematics.DRIVE_POSITION_CONVERSION;
     }
 
     /** @return Steer position, degrees, -inf to +inf */
@@ -120,7 +142,7 @@ public class SwerveModule extends SubsystemBase {
 
     /** @return Drive position, meters/second */
     public double getDriveVelocity() {
-        return driveEncoder.getVelocity();
+        return driveMotor.getVelocity().getValueAsDouble() * Constants.Kinematics.DRIVE_VELOCITY_CONVERSION;
     }
 
     /** @return Steer position, degrees/second */
@@ -143,7 +165,7 @@ public class SwerveModule extends SubsystemBase {
      * absolute encoder
      */
     public void resetEncoders() {
-        driveEncoder.setPosition(0.0);
+        driveMotor.setPosition(0.0);
         steerEncoder.setPosition(getAbsolutePosition());
     }
 
@@ -168,10 +190,11 @@ public class SwerveModule extends SubsystemBase {
         
         Rotation2d currentAngle = Rotation2d.fromDegrees(getSteerPosition());
         // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#module-angle-optimization
-        state = SwerveModuleState.optimize(state, currentAngle);
+        state.optimize(currentAngle);
         // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#cosine-compensation
         // state.speedMetersPerSecond *= state.angle.minus(currentAngle).getCos();
-        drivePidController.setReference(state.speedMetersPerSecond, SparkMax.ControlType.kVelocity);
+        final VelocityVoltage velocityVoltage = new VelocityVoltage(0).withSlot(0);
+        driveMotor.setControl(velocityVoltage.withVelocity(state.speedMetersPerSecond).withFeedForward(DRIVE_FF));
         setSteerAngle(state.angle.getDegrees());
     }
 

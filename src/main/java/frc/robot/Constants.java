@@ -43,19 +43,9 @@ public final class Constants {
   public static final class CanID {
     //Power
     public static final int POWER_DISTRIBUTION = 1;
+    //TODO: Define / update these for new robot
+    public static final int PIGEON_GYRO = 14;
     //Swerve drive modules - clockwise starting with front left (battery side is front of robot)
-    // public static final int SWERVE_MODULE_FRONT_LEFT_DRIVE_MOTOR = 7;
-    // public static final int SWERVE_MODULE_FRONT_LEFT_STEER_MOTOR = 6;
-    // public static final int SWERVE_MODULE_FRONT_LEFT_STEER_ENCODER = 2;
-    // public static final int SWERVE_MODULE_FRONT_RIGHT_DRIVE_MOTOR = 9;
-    // public static final int SWERVE_MODULE_FRONT_RIGHT_STEER_MOTOR = 8;
-    // public static final int SWERVE_MODULE_FRONT_RIGHT_STEER_ENCODER = 3;
-    // public static final int SWERVE_MODULE_BACK_RIGHT_DRIVE_MOTOR = 11;
-    // public static final int SWERVE_MODULE_BACK_RIGHT_STEER_MOTOR = 10;
-    // public static final int SWERVE_MODULE_BACK_RIGHT_STEER_ENCODER = 4;
-    // public static final int SWERVE_MODULE_BACK_LEFT_DRIVE_MOTOR = 13;
-    // public static final int SWERVE_MODULE_BACK_LEFT_STEER_MOTOR = 12;
-    // public static final int SWERVE_MODULE_BACK_LEFT_STEER_ENCODER = 5;
     public static final int SWERVE_MODULE_FRONT_LEFT_DRIVE_MOTOR = 11;
     public static final int SWERVE_MODULE_FRONT_LEFT_STEER_MOTOR = 10;
     public static final int SWERVE_MODULE_FRONT_LEFT_STEER_ENCODER = 4;
@@ -118,7 +108,6 @@ public final class Constants {
     /* Robot wheel radius in meters */
     public static final double WHEEL_RADIUS = WHEEL_DIAMETER / 2.0;
     
-
     /**
      * The left-to-right distance between the drivetrain wheels
      * <p>
@@ -179,6 +168,11 @@ public final class Constants {
             new Translation2d(DRIVETRAIN_TRACKWIDTH_METERS / 2.0, -DRIVETRAIN_WHEELBASE_METERS / 2.0),   //Front Right
             new Translation2d(-DRIVETRAIN_TRACKWIDTH_METERS / 2.0, DRIVETRAIN_WHEELBASE_METERS / 2.0),   //Back Left
             new Translation2d(-DRIVETRAIN_TRACKWIDTH_METERS / 2.0, -DRIVETRAIN_WHEELBASE_METERS / 2.0)); //Back Right
+
+    /* Change in linear acceleration greater than this value will trigger collision detected */
+    public static final double COLLISION_THRESHOLD_DELTA_G = 0.5;
+    /* Pose estimate should not be reset until after this long after collision */
+    public static final long MICROSECONDS_SINCE_COLLISION_THRESHOLD = 250000;  //0.25 seconds
   }
 
   public static final class PathPlanner {

@@ -27,6 +27,8 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.apriltag.AprilTagFields;
 import frc.robot.Constants;
 import frc.robot.vision.CameraPosition;
@@ -94,8 +96,7 @@ public class VisionSystem {
         visionCameras.removeIf(c -> {
             boolean isDisconnected = !c.isCameraConnected();
             if (isDisconnected) {
-                System.out.println("Warning: " + c.getCameraPosition() + " Camera (" + c.getCameraName() + ") disconnected!");
-                //TODO: publish alert warnings if not connected
+                new Alert("Camera (" + c.getCameraName() + ") disconnected!", AlertType.kWarning).set(true);
             } else {
                 c.getCameraInstance().setPipelineIndex(Constants.Vision.APRIL_TAG_PIPELINE_INDEX);
             }

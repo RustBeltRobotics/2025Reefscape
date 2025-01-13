@@ -1,11 +1,11 @@
 package frc.robot.subsystems;
 
 import java.util.List;
-
+import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 
-import com.studica.frc.AHRS;
-
+import com.ctre.phoenix6.configs.Pigeon2Configuration;
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.PIDConstants;
@@ -23,30 +23,35 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.util.CollisionDetector;
 import frc.robot.vision.VisionPoseEstimationResult;
 
 /**
 	- Contains majority of logic for driving the robot / controls the 4 SwerveModule instance (one for each wheel)
 	- Publishes robot pose and swerve module state data to network tables (for use by AdvantageScope / PathPlanner)
 	- Configures Auto chooser for selecting PathPlanner paths for Autonomous mode
-	- Reads Gyro readings for robot angle (yaw) and angular velocity (using NavX AHRS - Altitude and Heading Reference System)
+	- Reads Gyro readings for robot angle (yaw) and angular velocity (using CTRE Pigeon2)
 	- Updates robot odometry (estimation of location based on sensors) from swerve drive module states and vision system AprilTag readings (Limelight)
 	- Handles special drive modes from driver controller (evasion and wheel locking)
  */
 public class Drivetrain extends SubsystemBase {
 
-    // NavX connected over MXP
-    public final AHRS navx;
+    // Pigeon2 connected over CAN
+    private final Pigeon2 gyro;
+
+    private final CollisionDetector collisionDetector;
 
     private VisionSystem visionSystem;  //set this externally if you want to use vision measurements for odometry
 
@@ -85,6 +90,7 @@ public class Drivetrain extends SubsystemBase {
 
     // networktables publisher for advantagescope 2d pose visualization
     StructPublisher<Pose2d> poseEstimatePublisher = NetworkTableInstance.getDefault().getStructTopic("/RBR/PoseEstimated", Pose2d.struct).publish();
+    StructPublisher<Pose2d> visionResetPoseEstimatePublisher = NetworkTableInstance.getDefault().getStructTopic("/RBR/VisionResetPoseEstimated", Pose2d.struct).publish();
     StructPublisher<Pose2d> poseSwerveOdometryPublisher = NetworkTableInstance.getDefault().getStructTopic("/RBR/PoseSwerveOdometry", Pose2d.struct).publish();
 
     // networktables publisher for advantagescope chassis speed visualization
@@ -96,6 +102,9 @@ public class Drivetrain extends SubsystemBase {
     DoublePublisher frontRightAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/FR").publish();
     DoublePublisher backLeftAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/BL").publish();
     DoublePublisher backRightAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/BR").publish();
+
+    DoublePublisher linearAccelerationXPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/X").publish();
+    DoublePublisher linearAccelerationYPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/Y").publish();
 
     public Drivetrain() {
         RobotConfig ppRobotConfig = null;
@@ -162,8 +171,12 @@ public class Drivetrain extends SubsystemBase {
         backRightModule.resetEncoders();
 
         // Initialize and zero gyro
-        navx = new AHRS(AHRS.NavXComType.kMXP_SPI);
+        gyro = new Pigeon2(Constants.CanID.PIGEON_GYRO);
+        gyro.getConfigurator().apply(new Pigeon2Configuration());
+        gyro.setYaw(0);
 
+        collisionDetector = new CollisionDetector(gyro);
+        
         Pose2d initialRobotPose = new Pose2d();
         Rotation2d initialRobotRotation = getGyroscopeRotation();
         SwerveModulePosition[] initialModulePositions = getSwerveModulePositions();
@@ -185,7 +198,7 @@ public class Drivetrain extends SubsystemBase {
      * robot is currently facing to the 'forwards' direction.
      */
     public void zeroPoseEstimatorAngle() {
-        poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), new Pose2d(poseEstimator.getEstimatedPosition().getTranslation(), new Rotation2d(0)));
+        poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), new Pose2d(poseEstimator.getEstimatedPosition().getTranslation(), new Rotation2d()));
     }
 
     public Command zeroPoseEstimatorAngleCommand() {
@@ -201,9 +214,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public double getGyroscopeAngle() {
-        //Note: we need to flip the sign since navx reports clockwise as positive, where wpilib/FRC coordinate system is counter-clockwise as positive
-        var rawYaw = navx.getYaw();
-        return -(rawYaw); // -180 to 180, 0 degres is forward, ccw is +
+        return gyro.getYaw().getValueAsDouble();
     }
 
     // Returns the measurment of the gyroscope yaw. Used for field-relative drive
@@ -213,12 +224,12 @@ public class Drivetrain extends SubsystemBase {
 
     /** @return Pitch in degrees, -180 to 180 */
     public double getPitch() {
-        return navx.getPitch();
+        return gyro.getPitch().getValueAsDouble();
     }
 
     /** @return Roll in degrees, -180 to 180 */
     public double getRoll() {
-        return navx.getRoll();
+        return gyro.getRoll().getValueAsDouble();
     }
 
     public SwerveModulePosition[] getSwerveModulePositions() {
@@ -230,15 +241,24 @@ public class Drivetrain extends SubsystemBase {
 
     public void resetPose(Pose2d pose) {
         poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), pose);
-        //TODO: log this pose
+        resetPoseEstimateUsingVision();
+    }
+
+    //will return true if pose was able to be reset using vision system
+    public boolean resetPoseEstimateUsingVision() {
         if (Constants.Vision.VISION_ENABLED && visionSystem != null) {
             //This will force initial robot pose using vision system - overriding the initial pose set by PathPlanner auto
-            visionSystem.getRobotPoseEstimationResults().stream().findFirst().ifPresent(visionPoseEstimate -> {
-                poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(),
-                    visionPoseEstimate.getEstimatedRobotPose().estimatedPose.toPose2d());
-                //TODO: log this pose
-            });
+            Optional<VisionPoseEstimationResult> firstVisionPoseEstimationResult = visionSystem.getRobotPoseEstimationResults().stream().findFirst();
+            if (firstVisionPoseEstimationResult.isPresent()) {
+                Pose2d estimatedRobotPose = firstVisionPoseEstimationResult.get().getEstimatedRobotPose().estimatedPose.toPose2d();
+                poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
+                visionResetPoseEstimatePublisher.set(estimatedRobotPose);
+
+                return true;
+            }
         }
+
+        return false;
     }
 
     public Rotation2d getPoseRotation() {
@@ -253,6 +273,15 @@ public class Drivetrain extends SubsystemBase {
 
         // Update position estimate using odometry from swerve states
         poseEstimator.update(currentRobotRotation, currentModulePositions);
+
+        if (collisionDetector.isCollisionDetected() && collisionDetector.isStabilized()) {
+            boolean validPostFromVision = resetPoseEstimateUsingVision();
+            if (validPostFromVision) {
+                collisionDetector.clearDetectedCollision();
+            }
+        }
+
+        collisionDetector.checkForCollision();
 
         if (Constants.Vision.VISION_ENABLED && visionSystem != null) {
             List<VisionPoseEstimationResult> visionPoseEstimationResults = visionSystem.getRobotPoseEstimationResults();
@@ -347,14 +376,17 @@ public class Drivetrain extends SubsystemBase {
         poseSwerveOdometryPublisher.set(swerveOdometryPosition);
         chassisSpeedPublisherSetpoint.set(chassisSpeeds);
 
-        swerveStatePublisherMeasured.set(new SwerveModuleState[] { frontLeftModule.getState(), frontRightModule.getState(),
-            backLeftModule.getState(), backRightModule.getState() });
+        swerveStatePublisherMeasured.set(new SwerveModuleState[] { 
+            frontLeftModule.getState(), frontRightModule.getState(), backLeftModule.getState(), backRightModule.getState()
+        });
         swerveStatePublisherSetpoint.set(swerveModuleStates);
 
         frontLeftAbsoluteEncoderPublisher.set(frontLeftModule.getAbsolutePosition());
         frontRightAbsoluteEncoderPublisher.set(frontRightModule.getAbsolutePosition());
         backLeftAbsoluteEncoderPublisher.set(backLeftModule.getAbsolutePosition());
         backRightAbsoluteEncoderPublisher.set(backRightModule.getAbsolutePosition());
+        linearAccelerationXPublisher.set(currentLinearAccelerationX);
+        linearAccelerationYPublisher.set(currentLinearAccelerationY);
     }
 
     public void setVisionSystem(VisionSystem visionSystem) {
