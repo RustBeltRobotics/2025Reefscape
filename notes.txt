@@ -3,6 +3,15 @@
     - Update code to use Pigeon instead of Navx
     - Mount pigeon - center of robot with X+ facing front of robot
     - Define CAN IDs for devices using software
+    - Perform test driving runs to calculate std deviations for wheel odometry and vision for pose estimator (ensure finish pose has a AprilTag visible by vision)
+        1. Drive straight a set distance, measure starting robot pose vs. finish robot pose
+        2. Drive sideways (stafe straight) a set distance, measure starting robot pose vs. finish robot pose
+        3. Drive diagonally a set distance, measure starting robot pose vs. finish robot pose
+        - Repeat above several times, recording final measurements and comparing to each below
+        - For each of the above, compare measured pose vs. reported pose from SwerveDriveOdometry (/RBR/PoseSwerveOdometry in AdvantageScope),
+            this will give you odometry error value, use these errors to calculate std deviation
+        - For each of the above, compare measured pose vs. reported pose from PhotonVision (/RBR/Vision/PoseEstimates/Accepted in AdvantageScope),
+            this will give you vision error value, use these errors to calculate std deviation
 ----------
 Done:
 - Run SysId tests on drive motors on field

@@ -17,11 +17,13 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFieldLayout.OriginPosition;
 import edu.wpi.first.math.ComputerVisionUtil;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
@@ -203,7 +205,6 @@ public class VisionSystem {
 
             if (!usedAprilTagsForCamera.isEmpty()) {
                 // Do not use pose if robot pose is off the field 
-                // TODO: compare Z values if we care about them in 2025 game
                 if (estimatedPose.getX() < -Constants.Game.FIELD_POSE_XY_ERROR_MARGIN_METERS
                     || estimatedPose.getX() > Constants.Game.FIELD_LENGTH_METERS + Constants.Game.FIELD_POSE_XY_ERROR_MARGIN_METERS
                     || estimatedPose.getY() < -Constants.Game.FIELD_POSE_XY_ERROR_MARGIN_METERS
@@ -213,7 +214,7 @@ public class VisionSystem {
                 }
 
                 acceptedPoses.add(poseEstimate);
-                estimationResults.add(new VisionPoseEstimationResult(visionCamera, poseEstimate));
+                estimationResults.add(new VisionPoseEstimationResult(visionCamera, poseEstimate, getVisionMeasurementStandardDeviation(poseEstimate)));
 
                 if (visionCamera.getCameraPosition() == CameraPosition.FRONT_LEFT) {
                     frontLeftCameraPosePublisher.set(estimatedPose2d, networkTablesPoseTimestampMicroSeconds);
@@ -230,38 +231,48 @@ public class VisionSystem {
         }
     }
 
-    /*
-     * 
     public Matrix<N3, N1> getVisionMeasurementStandardDeviation(EstimatedRobotPose estimation) {
-        //TODO: run some unit tests with sample numbers to verify this logic is correct / produces desirable results
         double smallestTargetDistance = Double.POSITIVE_INFINITY;  //in meters
-        boolean singleTarget = estimation.targetsUsed.size() == 1;
+        double smallestPoseAmbiguity = Double.POSITIVE_INFINITY;
+        int numTargetsUsed = estimation.targetsUsed.size();
+        boolean singleTarget = numTargetsUsed == 1;
         double poseAmbiguityFactor = 1;  //default is for the case of multiple targets
 
         for (PhotonTrackedTarget target : estimation.targetsUsed) {
             //x = forward, y = left, z = up - from the camera
             Transform3d transform3d = target.getBestCameraToTarget();
+            double poseAmbiguity = target.getPoseAmbiguity();
             double distance = Math.sqrt(Math.pow(transform3d.getX(), 2) + Math.pow(transform3d.getY(), 2) + Math.pow(transform3d.getZ(), 2));
             if (distance < smallestTargetDistance) {
                 smallestTargetDistance = distance;
             }
+            if (poseAmbiguity < smallestPoseAmbiguity) {
+                smallestPoseAmbiguity = poseAmbiguity;
+            }
         }
 
         if (singleTarget) {
-            double ambiguityScore = estimation.targetsUsed.get(0).getPoseAmbiguity() + Constants.Vision.POSE_AMBIGUITY_SHIFTER;
+            double ambiguityScore = smallestPoseAmbiguity + Constants.Vision.POSE_AMBIGUITY_SHIFTER;
             poseAmbiguityFactor = Math.max(1, ambiguityScore * Constants.Vision.POSE_AMBIGUITY_MULTIPLIER);
+            double targetDistanceAdjusted = Math.max(0, smallestTargetDistance - Constants.Vision.NOISY_DISTANCE_METERS);
+            double weightedDistance = Math.max(1, targetDistanceAdjusted * Constants.Vision.DISTANCE_WEIGHT); //weighted distance (further distances will be trusted less than shorter)
+            double targetScore = weightedDistance * poseAmbiguityFactor;
+            double weightedTagPresence = (1 + ((numTargetsUsed - 1) * Constants.Vision.TAG_PRESENCE_WEIGHT));  //more targets = more confidence
+            double confidenceMultiplier = Math.max(1, targetScore / weightedTagPresence);
+
+            return Constants.Vision.DEFAULT_VISION_MEASUREMENT_STANDARD_DEVIATIONS.times(confidenceMultiplier);
         }
 
-        double targetDistanceAdjusted = Math.max(0, smallestTargetDistance - Constants.Vision.NOISY_DISTANCE_METERS);
-        double weightedDistance = Math.max(1, targetDistanceAdjusted * Constants.Vision.DISTANCE_WEIGHT); //weighted distance (further distances will be trusted less than shorter)
-        double targetScore = weightedDistance * poseAmbiguityFactor;
-        double weightedTagPresence = (1 + ((estimation.targetsUsed.size() - 1) * Constants.Vision.TAG_PRESENCE_WEIGHT));  //more targets = more confidence
-        double confidenceMultiplier = Math.max(1, targetScore / weightedTagPresence);
-
-        //Note: smaller numbers = trust vision measurements more, larger numbers = trust vision measurements less
-        return Constants.Vision.VISION_MEASUREMENT_STANDARD_DEVIATIONS.times(confidenceMultiplier);
+        //Note: higher values = trust the vision measurement less
+        double xyStdDev = Constants.Vision.MULTI_TAG_XY_PER_TAG_STANDARD_DEVIATION * numTargetsUsed;
+        double thetaStdDev = Constants.Vision.MULTI_TAG_THETA_STANDARD_DEVIATION;
+        if (smallestPoseAmbiguity >= 0.05) {
+            xyStdDev += smallestPoseAmbiguity;
+            thetaStdDev += smallestPoseAmbiguity;
+        }
+        
+        return VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev);
     }
-    */
 
     public void takeRawImageSnapshot() {
         for (VisionCamera visionCamera : visionCameras) {

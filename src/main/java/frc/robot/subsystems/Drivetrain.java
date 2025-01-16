@@ -26,11 +26,7 @@ import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -187,8 +183,8 @@ public class Drivetrain extends SubsystemBase {
         poseEstimator = new SwerveDrivePoseEstimator(
                 Constants.Kinematics.SWERVE_KINEMATICS,
                 initialRobotRotation, initialModulePositions, initialRobotPose,
-                VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5)),
-                VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(30)));
+                Constants.Kinematics.WHEEL_ODOMETRY_POSE_STANDARD_DEVIATIONS,
+                Constants.Vision.DEFAULT_VISION_MEASUREMENT_STANDARD_DEVIATIONS);
         
         zeroPoseEstimatorAngle();
     }
@@ -289,9 +285,7 @@ public class Drivetrain extends SubsystemBase {
             for (VisionPoseEstimationResult visionPoseEstimationResult : visionPoseEstimationResults) {
                 EstimatedRobotPose visionPoseEstimate = visionPoseEstimationResult.getEstimatedRobotPose();
                 Pose2d estimatedRobotPoseFromVision = visionPoseEstimate.estimatedPose.toPose2d();
-                //TODO: define this method / test and/or use a constant here for the standard deviation
-                // poseEstimator.setVisionMeasurementStdDevs(visionSystem.getVisionMeasurementStandardDeviation(visionPoseEstimate));
-                poseEstimator.addVisionMeasurement(estimatedRobotPoseFromVision, visionPoseEstimate.timestampSeconds);
+                poseEstimator.addVisionMeasurement(estimatedRobotPoseFromVision, visionPoseEstimate.timestampSeconds, visionPoseEstimationResult.getVisionMeasurementStdDevs());
             }
         }
     }
@@ -330,8 +324,6 @@ public class Drivetrain extends SubsystemBase {
         handleLockedStates();
         updateOdometry();
         updateTelemetry();
-        //TODO: MJR - consider adding collision detection, eg. https://gist.githubusercontent.com/kauailabs/8c152fa14937b9cdf137/raw/900c99b23a1940e121ed1ae1abd589eb4050b5c1/CollisionDetection.java
-        //set a state flag indicating collision occured - reset pose using vision then clear the flag if true
     }
 
     //update state of swerve modules based on current chassis speeds
@@ -385,12 +377,13 @@ public class Drivetrain extends SubsystemBase {
         frontRightAbsoluteEncoderPublisher.set(frontRightModule.getAbsolutePosition());
         backLeftAbsoluteEncoderPublisher.set(backLeftModule.getAbsolutePosition());
         backRightAbsoluteEncoderPublisher.set(backRightModule.getAbsolutePosition());
-        linearAccelerationXPublisher.set(currentLinearAccelerationX);
-        linearAccelerationYPublisher.set(currentLinearAccelerationY);
+        linearAccelerationXPublisher.set(collisionDetector.getCurrentLinearAccelerationX());
+        linearAccelerationYPublisher.set(collisionDetector.getCurrentLinearAccelerationY());
     }
 
     public void setVisionSystem(VisionSystem visionSystem) {
         this.visionSystem = visionSystem;
     }
+
     
 }

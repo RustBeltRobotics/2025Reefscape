@@ -173,6 +173,8 @@ public final class Constants {
     public static final double COLLISION_THRESHOLD_DELTA_G = 0.5;
     /* Pose estimate should not be reset until after this long after collision */
     public static final long MICROSECONDS_SINCE_COLLISION_THRESHOLD = 250000;  //0.25 seconds
+
+    public static final Matrix<N3, N1> WHEEL_ODOMETRY_POSE_STANDARD_DEVIATIONS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5));
   }
 
   public static final class PathPlanner {
@@ -189,7 +191,7 @@ public final class Constants {
     public static final boolean VISION_ENABLED = true;
     public static final int APRIL_TAG_PIPELINE_INDEX = 0;
     public static final String ARDUCAM_MODEL = "OV9281";
-    public static final double POSE_AMBIGUITY_CUTOFF = 0.05;  //TODO: test and adjust this value if necessary (photon docs suggest using 0.2)
+    public static final double POSE_AMBIGUITY_CUTOFF = 0.2;  //https://docs.photonvision.org/en/latest/docs/apriltag-pipelines/3D-tracking.html#ambiguity
     public static final double POSE_AMBIGUITY_SHIFTER = 0.2;
     public static final double POSE_AMBIGUITY_MULTIPLIER = 4.0;
     public static final double NOISY_DISTANCE_METERS = 2.5;  //distance beyond which vision measurements are noisy
@@ -202,8 +204,13 @@ public final class Constants {
      * Standard deviations for vision measurements. Increase these numbers to trust your
      * vision measurements less. This matrix is in the form [x, y, theta]ᵀ, with units in meters and radians.
      * Note that the SwerveDrivePoseEstimator default is 0.9 for all values for vision measurements.
+     * 
+     * See also https://www.chiefdelphi.com/t/how-do-i-understand-standard-deviation-in-the-poseestimator-class/411492/10?u=mrokitka
      */
-    public static final Matrix<N3, N1> VISION_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.9, 0.9, 0.9);
+    public static final Matrix<N3, N1> DEFAULT_VISION_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.9, 0.9, 0.9);
+    public static final Matrix<N3, N1> SINGLE_TAG_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.9, 0.9, Units.degreesToRadians(20));
+    public static final double MULTI_TAG_XY_PER_TAG_STANDARD_DEVIATION = 0.6;
+    public static final double MULTI_TAG_THETA_STANDARD_DEVIATION = Units.degreesToRadians(10);
     
     /**
      * Unique camera names, usable in PhotonCamera instances

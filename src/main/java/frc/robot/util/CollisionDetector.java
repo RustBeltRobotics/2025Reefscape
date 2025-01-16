@@ -63,5 +63,21 @@ public class CollisionDetector {
     public boolean isCollisionDetected() {
         return collisionDetected;
     }
+
+    public double getCurrentLinearAccelerationX() {
+        return currentLinearAccelerationX;
+    }
+
+    public void setCurrentLinearAccelerationX(double currentLinearAccelerationX) {
+        this.currentLinearAccelerationX = currentLinearAccelerationX;
+    }
+
+    public double getCurrentLinearAccelerationY() {
+        return currentLinearAccelerationY;
+    }
+
+    public void setCurrentLinearAccelerationY(double currentLinearAccelerationY) {
+        this.currentLinearAccelerationY = currentLinearAccelerationY;
+    }
     
 }
