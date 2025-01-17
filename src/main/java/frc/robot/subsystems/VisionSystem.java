@@ -74,12 +74,8 @@ public class VisionSystem {
      */
 
     public VisionSystem() {
-        try {
-            fieldLayout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2024Crescendo.m_resourceFile);
-            fieldLayout.setOrigin(OriginPosition.kBlueAllianceWallRightSide);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+        fieldLayout.setOrigin(OriginPosition.kBlueAllianceWallRightSide);
 
         VisionCamera frontLeftCamera = new VisionCamera(Constants.Vision.CameraName.FRONT_LEFT, CameraPosition.FRONT_LEFT,
             Constants.Vision.CameraPose.FRONT_LEFT, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);   
