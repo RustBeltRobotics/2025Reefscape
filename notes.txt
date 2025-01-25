@@ -35,10 +35,11 @@ Input:
             - Lower your exposure as low as possible. Using gain and brightness to account for lack of brightness.
         - For all pipelines, exposure time should be set as low as possible while still allowing for the target to be reliably tracked. 
             This allows for faster processing as decreasing exposure will increase your camera FPS.
-    - 1280x800 resolution
+    - 1280x800 @100 FPS resolution
     - Mode: 3d
-    - Exposure: 10.1
-    - brightness: 60
+    - Exposure: 70.0
+    - brightness: 0
+    - Gain: 40
 AprilTag:
     - Tag Family 36h11 (verify 2025 game is using the same family as 2024)
     - Decimate 2
@@ -47,7 +48,7 @@ AprilTag:
     - Refine Edges: On
     - Max Error Bits: 2 (maybe test with 3 at some point based on docs)
     - Decision Margin Cutoff: 30
-    - Pose Iterations: 
+    - Pose Iterations: 40
 Output:
     - Show Multiple Targets: Off
     - Do Multi-Target Estimation: On (This is "Multi-Tag")

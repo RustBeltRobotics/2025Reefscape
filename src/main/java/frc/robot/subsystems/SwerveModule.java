@@ -119,7 +119,7 @@ public class SwerveModule extends SubsystemBase {
         SparkMaxConfig steerMotorSparkMaxConfig = new SparkMaxConfig();
         steerMotorSparkMaxConfig.inverted(Constants.Kinematics.STEER_MOTOR_INVERTED).idleMode(IdleMode.kBrake);
         steerMotorSparkMaxConfig.smartCurrentLimit(Constants.CurrentLimit.SparkMax.SMART_STEER).secondaryCurrentLimit(Constants.CurrentLimit.SparkMax.SECONDARY_STEER);
-        steerMotorSparkMaxConfig.encoder.positionConversionFactor(Constants.Kinematics.DRIVE_POSITION_CONVERSION).velocityConversionFactor(Constants.Kinematics.DRIVE_VELOCITY_CONVERSION);
+        steerMotorSparkMaxConfig.encoder.positionConversionFactor(Constants.Kinematics.STEER_POSITION_CONVERSION).velocityConversionFactor(Constants.Kinematics.STEER_VELOCITY_CONVERSION);
         // Enable PID wrap around for the turning motor. This will allow the PID
         // controller to go through 0 to get to the setpoint i.e. going from 350 degrees
         // to 10 degrees will go through 0 rather than the other direction which is a
@@ -138,6 +138,15 @@ public class SwerveModule extends SubsystemBase {
     /** @return Steer position, degrees, -inf to +inf */
     public double getSteerPosition() {
         return steerEncoder.getPosition();
+    }
+
+    /*
+     * Get angle of steer motor in range -180 to 180 (useful for odometry publication to NT for viewing in AdvantageScope)
+     */
+    public double getSteerPositionConstrained() {
+        double rawPosition = steerEncoder.getPosition();
+
+        return rawPosition % 180.0;
     }
 
     /** @return Drive position, meters/second */
@@ -173,7 +182,14 @@ public class SwerveModule extends SubsystemBase {
      * @return The module state (velocity, m/s, and steer angle, Rotation2d)
      */
     public SwerveModuleState getState() {
-        return new SwerveModuleState(getDriveVelocity(), new Rotation2d(Math.toRadians(getSteerPosition())));
+        return new SwerveModuleState(getDriveVelocity(), Rotation2d.fromDegrees(getSteerPosition()));
+    }
+
+    /**
+     * @return The module state (velocity, m/s, and steer angle, Rotation2d - constrained to -pi to pi radians)
+     */
+    public SwerveModuleState getStateRotationConstrained() {
+        return new SwerveModuleState(getDriveVelocity(), Rotation2d.fromDegrees(getSteerPositionConstrained()));
     }
 
     /**
