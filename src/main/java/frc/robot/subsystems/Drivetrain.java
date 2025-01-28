@@ -81,26 +81,26 @@ public class Drivetrain extends SubsystemBase {
 
     //https://docs.wpilib.org/en/stable/docs/software/networktables/networktables-intro.html#networktables-organization
     // networktables publisher for advantagescope swerve visualization
-    StructArrayPublisher<SwerveModuleState> swerveStatePublisherMeasured = NetworkTableInstance.getDefault().getStructArrayTopic("/RBR/SwerveStates/Measured", SwerveModuleState.struct).publish();
-    StructArrayPublisher<SwerveModuleState> swerveStatePublisherSetpoint = NetworkTableInstance.getDefault().getStructArrayTopic("/RBR/SwerveStates/Setpoint", SwerveModuleState.struct).publish();
+    private StructArrayPublisher<SwerveModuleState> swerveStatePublisherMeasured = NetworkTableInstance.getDefault().getStructArrayTopic("/RBR/SwerveStates/Measured", SwerveModuleState.struct).publish();
+    private StructArrayPublisher<SwerveModuleState> swerveStatePublisherSetpoint = NetworkTableInstance.getDefault().getStructArrayTopic("/RBR/SwerveStates/Setpoint", SwerveModuleState.struct).publish();
 
     // networktables publisher for advantagescope 2d pose visualization
-    StructPublisher<Pose2d> poseEstimatePublisher = NetworkTableInstance.getDefault().getStructTopic("/RBR/PoseEstimated", Pose2d.struct).publish();
-    StructPublisher<Pose2d> visionResetPoseEstimatePublisher = NetworkTableInstance.getDefault().getStructTopic("/RBR/VisionResetPoseEstimated", Pose2d.struct).publish();
-    StructPublisher<Pose2d> poseSwerveOdometryPublisher = NetworkTableInstance.getDefault().getStructTopic("/RBR/PoseSwerveOdometry", Pose2d.struct).publish();
+    private StructPublisher<Pose2d> poseEstimatePublisher = NetworkTableInstance.getDefault().getStructTopic("/RBR/PoseEstimated", Pose2d.struct).publish();
+    private StructPublisher<Pose2d> visionResetPoseEstimatePublisher = NetworkTableInstance.getDefault().getStructTopic("/RBR/VisionResetPoseEstimated", Pose2d.struct).publish();
+    private StructPublisher<Pose2d> poseSwerveOdometryPublisher = NetworkTableInstance.getDefault().getStructTopic("/RBR/PoseSwerveOdometry", Pose2d.struct).publish();
 
     // networktables publisher for advantagescope chassis speed visualization
     // StructPublisher<ChassisSpeeds> chassisSpeedPublisherMeasured = NetworkTableInstance.getDefault().getStructTopic("/RBR/ChassisSpeed/Measured", ChassisSpeeds.struct).publish();
     //Navx velicity data is too inaccurate to make this useful
-    StructPublisher<ChassisSpeeds> chassisSpeedPublisherSetpoint = NetworkTableInstance.getDefault().getStructTopic("/RBR/ChassisSpeed/Setpoint", ChassisSpeeds.struct).publish();
+    private StructPublisher<ChassisSpeeds> chassisSpeedPublisherSetpoint = NetworkTableInstance.getDefault().getStructTopic("/RBR/ChassisSpeed/Setpoint", ChassisSpeeds.struct).publish();
 
-    DoublePublisher frontLeftAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/FL").publish();
-    DoublePublisher frontRightAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/FR").publish();
-    DoublePublisher backLeftAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/BL").publish();
-    DoublePublisher backRightAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/BR").publish();
+    private DoublePublisher frontLeftAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/FL").publish();
+    private DoublePublisher frontRightAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/FR").publish();
+    private DoublePublisher backLeftAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/BL").publish();
+    private DoublePublisher backRightAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/BR").publish();
 
-    DoublePublisher linearAccelerationXPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/X").publish();
-    DoublePublisher linearAccelerationYPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/Y").publish();
+    private DoublePublisher linearAccelerationXPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/X").publish();
+    private DoublePublisher linearAccelerationYPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/Y").publish();
 
     public Drivetrain() {
         RobotConfig ppRobotConfig = null;

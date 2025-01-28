@@ -7,6 +7,7 @@ package frc.robot;
 import frc.robot.Constants.DriverStation;
 import frc.robot.commands.FieldOrientedDriveCommand;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.VisionSystem;
 import frc.robot.util.Utilities;
 
@@ -40,6 +41,7 @@ public class RobotContainer {
   private final CommandXboxController driverController = new CommandXboxController(DriverStation.CONTROLLER_PORT_DRIVER);
   private final CommandXboxController operatorController = new CommandXboxController(DriverStation.CONTROLLER_PORT_OPERATOR);
   private final Drivetrain drivetrain = new Drivetrain();
+  private final Elevator elevator = new Elevator();
   private final VisionSystem visionSystem;
 
   private final SendableChooser<Command> autoChooser;
@@ -76,16 +78,24 @@ public class RobotContainer {
   private void configureBindings() {
     // TODO: MJR
     
-    // Pressing A button zeros the gyroscope
+    // Pressing A button sets forward direction to current robot heading
     driverController.a().onTrue(drivetrain.zeroPoseEstimatorAngleCommand());
+    //Pressing B button applies kS voltage to the elevator vertical motors (this is for testing / determining proper kS value)
+    driverController.b().onTrue(elevator.getTestInitialKsCommand());
+    //Pressing X button moves elevator to 6" setpoint (just for testing / PID tuning)
+    driverController.x().onTrue(elevator.elevatorTestVerticalSetpointCommand());
+    //Pressing Y button stops elevator / moves it to bottom position
+    driverController.y().onTrue(elevator.elevatorVerticalStopCommand());
   }
 
   private void setDefaultCommands() {
     DoubleSupplier translationXSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getLeftY(), 1.0, 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
     DoubleSupplier translationYSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getLeftX(), 1.0, 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
     DoubleSupplier rotationSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getRightX(), 1.0, 0.05) * Constants.Kinematics.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND * MAX_SPEED_FACTOR;
-    
     drivetrain.setDefaultCommand(new FieldOrientedDriveCommand(drivetrain, translationXSupplier, translationYSupplier, rotationSupplier));
+
+    // DoubleSupplier elevatorSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
+    // elevator.setDefaultCommand(elevator.elevatorVerticalXBoxControllerCommand(elevatorSpeedSupplier));
   }
 
   /**
