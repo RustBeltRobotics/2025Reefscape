@@ -8,33 +8,19 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.units.measure.MutDistance;
-import edu.wpi.first.units.measure.MutLinearVelocity;
-import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 
 /**
  * Drive subsystem for SysId characterization of swerve drive motors.
  */
-public class SysIdDrivetrain extends SubsystemBase {
+public class SysIdDrivetrain extends SysIdSubsystem {
     
     private final TalonFX frontLeftDriveMotor;
     private final TalonFX frontRightDriveMotor;
     private final TalonFX backRightDriveMotor;
     private final TalonFX backLeftDriveMotor;
-    
-    // Mutable holder for unit-safe voltage values, persisted to avoid reallocation.
-    private final MutVoltage m_appliedVoltage = Volts.mutable(0);
-    // Mutable holder for unit-safe linear distance values, persisted to avoid reallocation.
-    private final MutDistance m_distance = Meters.mutable(0);
-    // Mutable holder for unit-safe linear velocity values, persisted to avoid reallocation.
-    private final MutLinearVelocity m_velocity = MetersPerSecond.mutable(0);
-
-    private final SysIdRoutine m_sysIdRoutine;
 
     public SysIdDrivetrain() {
         // Setup drive motor controllers
@@ -103,21 +89,4 @@ public class SysIdDrivetrain extends SubsystemBase {
         return driveConfig;
     }
 
-      /**
-     * Returns a command that will execute a quasistatic test in the given direction.
-     *
-     * @param direction The direction (forward or reverse) to run the test in
-     */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutine.quasistatic(direction);
-    }
-
-    /**
-     * Returns a command that will execute a dynamic test in the given direction.
-     *
-     * @param direction The direction (forward or reverse) to run the test in
-     */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutine.dynamic(direction);
-    }
 }

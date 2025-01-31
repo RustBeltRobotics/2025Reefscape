@@ -27,7 +27,6 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -280,11 +279,11 @@ public class Elevator extends SubsystemBase {
         tiltEncoder.setPosition(0.0);
     }
 
-    private Distance convertEncoderRotationsToDistance(Angle rotations) {
+    public static Distance convertEncoderRotationsToDistance(Angle rotations) {
         return Meters.of((rotations.in(Rotations) / Constants.Elevator.kElevatorGearing) * (Constants.Elevator.kElevatorDrumRadius * 2 * Math.PI));
     }
 
-    private Angle convertDistanceToEncoderRotations(Distance distance) {
+    public static Angle convertDistanceToEncoderRotations(Distance distance) {
       return Rotations.of(distance.in(Meters) / (Constants.Elevator.kElevatorDrumRadius * 2 * Math.PI) * Constants.Elevator.kElevatorGearing);
     }
 }

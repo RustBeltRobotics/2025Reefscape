@@ -43,23 +43,22 @@ public final class Constants {
   public static final class CanID {
     //Power
     public static final int POWER_DISTRIBUTION = 1;
-    //TODO: Define / update these for new robot
-    public static final int PIGEON_GYRO = 14;
-    public static final int ELEVATOR_LEFT_MOTOR = 15;
+    public static final int PIGEON_GYRO = 10;
+    public static final int ELEVATOR_LEFT_MOTOR = 14;
     public static final int ELEVATOR_RIGHT_MOTOR = 16;
-    public static final int ELEVATOR_EXTEND_RETRACT_MOTOR = 17;
-    public static final int SWERVE_MODULE_FRONT_LEFT_DRIVE_MOTOR = 11;
-    public static final int SWERVE_MODULE_FRONT_LEFT_STEER_MOTOR = 10;
-    public static final int SWERVE_MODULE_FRONT_LEFT_STEER_ENCODER = 4;
-    public static final int SWERVE_MODULE_FRONT_RIGHT_DRIVE_MOTOR = 13;
-    public static final int SWERVE_MODULE_FRONT_RIGHT_STEER_MOTOR = 12;
-    public static final int SWERVE_MODULE_FRONT_RIGHT_STEER_ENCODER = 5;
-    public static final int SWERVE_MODULE_BACK_RIGHT_DRIVE_MOTOR = 7;
-    public static final int SWERVE_MODULE_BACK_RIGHT_STEER_MOTOR = 6;
-    public static final int SWERVE_MODULE_BACK_RIGHT_STEER_ENCODER = 2;
-    public static final int SWERVE_MODULE_BACK_LEFT_DRIVE_MOTOR = 9;
-    public static final int SWERVE_MODULE_BACK_LEFT_STEER_MOTOR = 8;
-    public static final int SWERVE_MODULE_BACK_LEFT_STEER_ENCODER = 3;
+    public static final int ELEVATOR_EXTEND_RETRACT_MOTOR = 12;
+    public static final int SWERVE_MODULE_FRONT_LEFT_DRIVE_MOTOR = 6;
+    public static final int SWERVE_MODULE_FRONT_LEFT_STEER_MOTOR = 13;
+    public static final int SWERVE_MODULE_FRONT_LEFT_STEER_ENCODER = 2;
+    public static final int SWERVE_MODULE_FRONT_RIGHT_DRIVE_MOTOR = 7;
+    public static final int SWERVE_MODULE_FRONT_RIGHT_STEER_MOTOR = 17;
+    public static final int SWERVE_MODULE_FRONT_RIGHT_STEER_ENCODER = 3;
+    public static final int SWERVE_MODULE_BACK_RIGHT_DRIVE_MOTOR = 9;
+    public static final int SWERVE_MODULE_BACK_RIGHT_STEER_MOTOR = 18;
+    public static final int SWERVE_MODULE_BACK_RIGHT_STEER_ENCODER = 5;
+    public static final int SWERVE_MODULE_BACK_LEFT_DRIVE_MOTOR = 8;
+    public static final int SWERVE_MODULE_BACK_LEFT_STEER_MOTOR = 15;
+    public static final int SWERVE_MODULE_BACK_LEFT_STEER_ENCODER = 4;
   }
 
   /**
@@ -139,7 +138,7 @@ public final class Constants {
     /** Conversion between motor rotations and drive meters */
     public static final double DRIVE_POSITION_CONVERSION = WHEEL_CIRCUMFERENCE * DRIVE_GEAR_RATIO;
         
-    /** Conversion between motor rotations per minute and drive meters per seconds */
+    /** Conversion between motor rotations per minute and drive meters per second */
     public static final double DRIVE_VELOCITY_CONVERSION = DRIVE_POSITION_CONVERSION / BasicUnits.SECONDS_PER_MINUTE;
 
     /** Conversion between motor rotations and steer degrees */
