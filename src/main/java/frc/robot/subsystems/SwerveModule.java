@@ -31,8 +31,8 @@ import frc.robot.util.Utilities;
 public class SwerveModule extends SubsystemBase {
 
     // Drive PID Constants
+    //TODO: Run SysId routine and update these values, in addition to the other drive PID values within getDriveTalonFXConfiguration()
     public static final double DRIVE_FEEDFORWARD_KV = 2.3489;  //From SysId, confirmed with recalc https://www.reca.lc/drive
-    // public static final double DRIVE_P = 0.2;  //From Eclipse
     public static final double DRIVE_P = 0.00044742;  //From SysId
     public static final double DRIVE_I = 0.0;
     public static final double DRIVE_D = 0.0;
@@ -170,8 +170,7 @@ public class SwerveModule extends SubsystemBase {
     }
 
     /**
-     * Resets the drive relative encoder to 0 and steer relative encoder to match
-     * absolute encoder
+     * Resets the drive relative encoder to 0 and steer relative encoder to match the absolute encoder
      */
     public void resetEncoders() {
         driveMotor.setPosition(0.0);

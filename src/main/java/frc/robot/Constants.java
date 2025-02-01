@@ -138,7 +138,7 @@ public final class Constants {
     /** Conversion between motor rotations and drive meters */
     public static final double DRIVE_POSITION_CONVERSION = WHEEL_CIRCUMFERENCE * DRIVE_GEAR_RATIO;
         
-    /** Conversion between motor rotations per minute and drive meters per second */
+    /** Conversion between motor rotations per second and drive meters per second */
     // public static final double DRIVE_VELOCITY_CONVERSION = DRIVE_POSITION_CONVERSION / BasicUnits.SECONDS_PER_MINUTE;
     //Note: TalonFX reports velocity in RPS, not RPM - so no need to divide by 60
     //TODO: verify this exhibits the proper wheel velocity when testing drive
