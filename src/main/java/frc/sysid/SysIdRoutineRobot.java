@@ -13,14 +13,14 @@ public class SysIdRoutineRobot extends TimedRobot {
 
     private final CommandXboxController driverController = new CommandXboxController(DriverStation.CONTROLLER_PORT_DRIVER);
     private final SysIdDrivetrain drivetrain = new SysIdDrivetrain();
-    private final SysIdElevator elevator = new SysIdElevator();
+    private final SysIdVerticalElevator verticalElevator = new SysIdVerticalElevator();
 
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
      */
     public SysIdRoutineRobot() {
-        SysIdSubsystem subsystemUnderTest = elevator;
+        SysIdSubsystem subsystemUnderTest = verticalElevator;
         
         // Bind full set of SysId routine tests to buttons; a complete routine should run each of these
         // once.

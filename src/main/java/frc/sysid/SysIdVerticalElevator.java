@@ -2,7 +2,6 @@ package frc.sysid;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -11,19 +10,23 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
 import frc.robot.subsystems.Elevator;
 
-public class SysIdElevator extends SysIdSubsystem {
+public class SysIdVerticalElevator extends SysIdSubsystem {
 
     private final SparkMax leftMotor;
     private final RelativeEncoder leftEncoder;
     private final SparkMax rightMotor;
     private final RelativeEncoder rightEncoder;
 
-    public SysIdElevator() {
+    public SysIdVerticalElevator() {
         leftMotor = new SparkMax(Constants.CanID.ELEVATOR_LEFT_MOTOR, MotorType.kBrushless);
         //TODO: confirm if we should be inverting here or not
         SparkMaxConfig leftConfig = getConfig();
@@ -68,6 +71,41 @@ public class SysIdElevator extends SysIdSubsystem {
                 // Tell SysId to make generated commands require this subsystem, suffix test state in
                 // WPILog with this subsystem's name
                 this)
+        );
+    }
+
+    private Command resetEncodersCommand() {
+        return runOnce(() -> {
+            leftEncoder.setPosition(0);
+            rightEncoder.setPosition(0);
+        });
+    }
+    
+    @Override
+    public Command sysIdDynamic(Direction direction) {
+        return Commands.sequence(
+            resetEncodersCommand(),
+            m_sysIdRoutine.dynamic(direction)
+            .until(() -> {
+                double currentHeight = Elevator.convertEncoderRotationsToDistance(Rotations.of(leftEncoder.getPosition())).in(Meters);
+
+                return currentHeight > (Constants.Elevator.kMaxElevatorHeightMeters - Units.inchesToMeters(2));
+            })
+        );
+    }
+
+
+
+    @Override
+    public Command sysIdQuasistatic(Direction direction) {
+        return Commands.sequence(
+            resetEncodersCommand(),
+            m_sysIdRoutine.quasistatic(direction)
+            .until(() -> {
+                double currentHeight = Elevator.convertEncoderRotationsToDistance(Rotations.of(leftEncoder.getPosition())).in(Meters);
+                
+                return currentHeight > (Constants.Elevator.kMaxElevatorHeightMeters - Units.inchesToMeters(2));
+            })
         );
     }
 
