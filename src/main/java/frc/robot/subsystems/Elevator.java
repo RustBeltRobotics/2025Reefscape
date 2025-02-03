@@ -59,7 +59,7 @@ public class Elevator extends SubsystemBase {
     private final SparkClosedLoopController leftPidController;
     private final SparkMax rightMotor;
     private final RelativeEncoder rightEncoder;
-    private final SparkMax tiltMotor;  //this is for forward/backward angling motion of the elevator
+    private final SparkMax tiltMotor;  //this is for forward/backward angling motion of the elevator - note: starting position is angled inside robot perimeter
     private final RelativeEncoder tiltEncoder;
     private ElevatorFeedforward verticalFeedForward;
     private double leftMotorOutputCurrentAmps;
@@ -118,7 +118,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public void avoidTipping() {
-        //TODO: if elevator is tilted out, snap it back in to vertical position
+        //TODO: if elevator is vertical, snap it back in angled position
         //TODO: if elevator is raised high, lower it quickly to bring momentum/CG down
     }
 

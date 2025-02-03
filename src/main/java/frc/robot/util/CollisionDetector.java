@@ -1,16 +1,15 @@
 package frc.robot.util;
 
-import com.ctre.phoenix6.hardware.Pigeon2;
-
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
+import frc.robot.hardware.MultiGyro;
 
 public class CollisionDetector {
 
-    private final Pigeon2 gyro;
+    private final MultiGyro gyro;
     private final Alert collisionDetectedAlert = new Alert("Collision detected!", AlertType.kWarning);
     private double currentLinearAccelerationX;
     private double currentLinearAccelerationY;
@@ -19,10 +18,10 @@ public class CollisionDetector {
     private long collisionTimeMicroSeconds;
     private boolean collisionDetected;
 
-    public CollisionDetector(Pigeon2 gyro) {
+    public CollisionDetector(MultiGyro gyro) {
         this.gyro = gyro;
-        currentLinearAccelerationX = gyro.getAccelerationX().getValueAsDouble();
-        currentLinearAccelerationY = gyro.getAccelerationY().getValueAsDouble();
+        currentLinearAccelerationX = gyro.getAccelerationX();
+        currentLinearAccelerationY = gyro.getAccelerationY();
         lastLinearAccelerationX = currentLinearAccelerationX;
         lastLinearAccelerationY = currentLinearAccelerationY;
     }
@@ -30,8 +29,8 @@ public class CollisionDetector {
     public boolean checkForCollision() {
         lastLinearAccelerationX = currentLinearAccelerationX;
         lastLinearAccelerationY = currentLinearAccelerationY;
-        currentLinearAccelerationX = gyro.getAccelerationX().getValueAsDouble();
-        currentLinearAccelerationY = gyro.getAccelerationY().getValueAsDouble();
+        currentLinearAccelerationX = gyro.getAccelerationX();
+        currentLinearAccelerationY = gyro.getAccelerationY();
         double currentJerkX = Math.abs(currentLinearAccelerationX - lastLinearAccelerationX);
         double currentJerkY = Math.abs(currentLinearAccelerationY - lastLinearAccelerationY);
 

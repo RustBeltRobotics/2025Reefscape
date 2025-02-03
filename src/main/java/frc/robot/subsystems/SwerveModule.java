@@ -31,13 +31,13 @@ import frc.robot.util.Utilities;
 public class SwerveModule extends SubsystemBase {
 
     // Drive PID Constants
-    //TODO: Run SysId routine and update these values, in addition to the other drive PID values within getDriveTalonFXConfiguration()
-    public static final double DRIVE_FEEDFORWARD_KV = 2.3489;  //From SysId, confirmed with recalc https://www.reca.lc/drive
-    public static final double DRIVE_P = 0.00044742;  //From SysId
+    //TODO: Run SysId routine and update these values
+    public static final double DRIVE_FEEDFORWARD_KS = 0.14304;  //TODO: get thus value from sysId
+    public static final double DRIVE_FEEDFORWARD_KV = 2.30;  //From recalc https://www.reca.lc/drive
+    public static final double DRIVE_FEEDFORWARD_KA = 0.23;  //From recalc https://www.reca.lc/drive
+    public static final double DRIVE_P = 1.0;  //TODO: get these values from SysId - these are just suggested starting values from YAGSL
     public static final double DRIVE_I = 0.0;
     public static final double DRIVE_D = 0.0;
-    // public static final double DRIVE_FF = 0.22;  //From Eclipse
-    public static final double DRIVE_FF = 1.0 / DRIVE_FEEDFORWARD_KV;
 
     // Steer PID Constants
     // For how to tune these values, see: https://www.chiefdelphi.com/t/official-sds-mk3-mk4-code/397109/17
@@ -85,31 +85,34 @@ public class SwerveModule extends SubsystemBase {
         TalonFXConfiguration driveConfig = new TalonFXConfiguration();
         //Drive PIDF values
         Slot0Configs slot0 = new Slot0Configs();
-        slot0.kS = 0.14304; 
-        slot0.kV = 0.10884; 
-        slot0.kA = 0.023145; 
-        slot0.kP = 0.07; 
-        slot0.kI = 0; 
-        slot0.kD = 0; 
+        // slot0.kV = 0.10884; 
+        // slot0.kA = 0.023145; 
+        // slot0.kP = 0.07; 
+        slot0.kS = DRIVE_FEEDFORWARD_KS; 
+        slot0.kV = DRIVE_FEEDFORWARD_KV; 
+        slot0.kA = DRIVE_FEEDFORWARD_KA;
+        slot0.kP = DRIVE_P; 
+        slot0.kI = DRIVE_I; 
+        slot0.kD = DRIVE_D; 
 
         driveConfig.Slot0 = slot0;
         
         // Direction and neutral mode
-        driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;  //TODO: verify/test this
+        driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         // Ramp rates
         driveConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.0;
         
         // Gear ratio
-        driveConfig.Feedback.SensorToMechanismRatio = 1.0; // 1:1 sensor to mechanism ratio
+        driveConfig.Feedback.SensorToMechanismRatio = 1.0; // 1:1 sensor to mechanism ratio (conversion factor is handled explicitly in code)
 
         // Current limits
         driveConfig.CurrentLimits.StatorCurrentLimit = 120; // 120A stator current limit
         driveConfig.CurrentLimits.StatorCurrentLimitEnable = true; // Enable stator current limiting
 
-        driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = +400; // 40A peak forward torque current
-        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -400; // 40A peak reverse torque current
+        driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = +120;
+        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -120;
         driveConfig.TorqueCurrent.TorqueNeutralDeadband = 0.05; // 5% torque neutral deadband
 
         return driveConfig;
@@ -209,7 +212,8 @@ public class SwerveModule extends SubsystemBase {
         // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#cosine-compensation
         // state.speedMetersPerSecond *= state.angle.minus(currentAngle).getCos();
         final VelocityVoltage velocityVoltage = new VelocityVoltage(0).withSlot(0);
-        driveMotor.setControl(velocityVoltage.withVelocity(state.speedMetersPerSecond).withFeedForward(DRIVE_FF));
+        double rotationsPerSecond = state.speedMetersPerSecond / Constants.Kinematics.DRIVE_VELOCITY_CONVERSION;
+        driveMotor.setControl(velocityVoltage.withVelocity(rotationsPerSecond));
         setSteerAngle(state.angle.getDegrees());
     }
 

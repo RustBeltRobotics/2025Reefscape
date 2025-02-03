@@ -153,7 +153,7 @@ public final class Constants {
     /**
      * The maximum linear velocity of a swerve module in meters per second. Calculate using https://www.reca.lc/drive
      */
-    public static final double MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND = 5.37;  //TODO: compare to empirical measurement
+    public static final double MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND = 5.48;  //TODO: compare to empirical measurement
 
     /**
      * The maximum angular velocity of the robot in radians per second. This is a
