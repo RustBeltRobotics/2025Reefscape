@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -31,11 +32,10 @@ import frc.robot.util.Utilities;
 public class SwerveModule extends SubsystemBase {
 
     // Drive PID Constants
-    //TODO: Run SysId routine and update these values
-    public static final double DRIVE_FEEDFORWARD_KS = 0.14304;  //TODO: get thus value from sysId
-    public static final double DRIVE_FEEDFORWARD_KV = 2.30;  //From recalc https://www.reca.lc/drive
-    public static final double DRIVE_FEEDFORWARD_KA = 0.23;  //From recalc https://www.reca.lc/drive
-    public static final double DRIVE_P = 1.0;  //TODO: get these values from SysId - these are just suggested starting values from YAGSL
+    public static final double DRIVE_FEEDFORWARD_KS = 0.1759;  //from sysId - using Rotations as unit type, Simple as mechanism
+    public static final double DRIVE_FEEDFORWARD_KV = 0.11294;  //from sysId
+    public static final double DRIVE_FEEDFORWARD_KA = 0.0054209;  //from sysId
+    public static final double DRIVE_P = 0.16367; //from sysId using CTRE phoenix 6 preset
     public static final double DRIVE_I = 0.0;
     public static final double DRIVE_D = 0.0;
 
@@ -209,8 +209,9 @@ public class SwerveModule extends SubsystemBase {
         Rotation2d currentAngle = Rotation2d.fromDegrees(getSteerPosition());
         // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#module-angle-optimization
         state.optimize(currentAngle);
-        // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#cosine-compensation
-        // state.speedMetersPerSecond *= state.angle.minus(currentAngle).getCos();
+        // Scale speed by cosine of angle error. This scales down movement perpendicular to the desired
+        // direction of travel that can occur when modules change directions. This results in smoother driving.
+        state.cosineScale(currentAngle);
         final VelocityVoltage velocityVoltage = new VelocityVoltage(0).withSlot(0);
         double rotationsPerSecond = state.speedMetersPerSecond / Constants.Kinematics.DRIVE_VELOCITY_CONVERSION;
         driveMotor.setControl(velocityVoltage.withVelocity(rotationsPerSecond));
@@ -232,9 +233,24 @@ public class SwerveModule extends SubsystemBase {
         steerMotor.set(0.);
     }
 
+    /**
+     * Set angle of steer motor - note resulting output will be optimized to minimize total spin distance
+     * 
+     * @param targetAngleInDegrees
+     */
     public void setSteerAngle(double targetAngleInDegrees) {
         double currentSparkAngle = getSteerPosition();
         double sparkRelativeTargetAngle = Utilities.reboundValue(targetAngleInDegrees, currentSparkAngle);
         steerPidController.setReference(sparkRelativeTargetAngle, ControlType.kPosition);
+    }
+
+    /**
+     * Set angle of steer motor - no optimizations will be applied to the target angle (useful for steer PID tuning)
+     * 
+     * @param targetAngleInDegrees
+     */
+    public void setSteerAngleAbsolute(double targetAngleInDegrees) {
+        REVLibError pidResult = steerPidController.setReference(targetAngleInDegrees, ControlType.kPosition);
+        Utilities.verifySparkMaxStatus(pidResult, steerMotor.getDeviceId(), "Swerve Steer Motor", "setPIDReferenceAbsolute");
     }
 }

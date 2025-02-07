@@ -1,6 +1,10 @@
 package frc.robot.util;
 
+import com.revrobotics.REVLibError;
+
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 
 public class Utilities {
     /**
@@ -53,5 +57,12 @@ public class Utilities {
             value = lowerBound + ((value - upperBound)%(upperBound - lowerBound));
         }
         return value;
+    }
+
+    public static void verifySparkMaxStatus(REVLibError revResult, int canID, String deviceName, String operation) {
+        if (revResult != REVLibError.kOk) {
+            new Alert(deviceName + " SparkMax with CAN ID: " + canID + " failed " + operation + "! Result = " + revResult.toString(), AlertType.kError).set(true);
+            System.out.println("Error configuring drive motor: " + revResult);
+        }
     }
 }

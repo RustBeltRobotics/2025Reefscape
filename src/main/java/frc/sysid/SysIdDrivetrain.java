@@ -14,6 +14,8 @@ import frc.robot.Constants;
 
 /**
  * Drive subsystem for SysId characterization of swerve drive motors.
+ * After running the tests you must convert the .hoot file from the USB drive to a .wpilog file using Phoenix Tuner 
+ * in order to obtain the log file to load into the SysID tool.
  */
 public class SysIdDrivetrain extends SysIdSubsystem {
     
@@ -36,14 +38,16 @@ public class SysIdDrivetrain extends SysIdSubsystem {
         backLeftDriveMotor = new TalonFX(Constants.CanID.SWERVE_MODULE_BACK_LEFT_DRIVE_MOTOR);
         backLeftDriveMotor.getConfigurator().apply(getTalonFXConfiguration());
 
+        SignalLogger.setPath("/media/sda1/logs/");
+        SignalLogger.start();
+
         // Create a new SysId routine for characterizing the drive.
         m_sysIdRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
                 null,        // Use default ramp rate (1 V/s)
                 Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
                 null,        // Use default timeout (10 s)
-                            // Log state with Phoenix SignalLogger class
-                (state) -> SignalLogger.writeString("state", state.toString())
+                (state) -> SignalLogger.writeString("state", state.toString()) // Log state with Phoenix SignalLogger class
             ),
             new SysIdRoutine.Mechanism(
                 // Tell SysId how to plumb the driving voltage to the motors.
@@ -83,7 +87,7 @@ public class SysIdDrivetrain extends SysIdSubsystem {
     private TalonFXConfiguration getTalonFXConfiguration() {
         TalonFXConfiguration driveConfig = new TalonFXConfiguration();
         // Direction and neutral mode
-        driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;  //TODO: verify/test this
+        driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         return driveConfig;
