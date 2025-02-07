@@ -51,6 +51,7 @@ public class Robot extends TimedRobot {
     DriverStation.startDataLog(DataLogManager.getLog());
 
     // Log Phoenix / CTRE device signals (this code is only necessary outside of competition)
+    SignalLogger.setPath("/media/sda1/logs/");
     SignalLogger.start();
 
     // Log Rev device signals (see https://github.com/Mechanical-Advantage/AdvantageScope/blob/main/docs/REV-LOGGING.md)

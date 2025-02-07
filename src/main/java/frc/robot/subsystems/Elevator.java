@@ -90,7 +90,6 @@ public class Elevator extends SubsystemBase {
     //Note: because the elevator has a cascade design - it will move twice as far as the motor encoder output
     public Elevator() {
         leftMotor = new SparkMax(Constants.CanID.ELEVATOR_LEFT_MOTOR, MotorType.kBrushless);
-        //TODO: confirm if we should be inverting here or not
         SparkMaxConfig leftMotorConfig = getVerticalMotorLeaderConfig(false, Constants.Elevator.kElevatorKp, Constants.Elevator.kElevatorKi, Constants.Elevator.kElevatorKd);
         leftMotor.configure(leftMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         leftEncoder = leftMotor.getEncoder();

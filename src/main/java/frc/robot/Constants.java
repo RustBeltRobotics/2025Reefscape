@@ -47,6 +47,7 @@ public final class Constants {
     public static final int ELEVATOR_LEFT_MOTOR = 14;
     public static final int ELEVATOR_RIGHT_MOTOR = 16;
     public static final int ELEVATOR_EXTEND_RETRACT_MOTOR = 12;
+    public static final int REJECTOR_MOTOR = 19;
     public static final int SWERVE_MODULE_FRONT_LEFT_DRIVE_MOTOR = 6;
     public static final int SWERVE_MODULE_FRONT_LEFT_STEER_MOTOR = 13;
     public static final int SWERVE_MODULE_FRONT_LEFT_STEER_ENCODER = 2;
@@ -85,7 +86,7 @@ public final class Constants {
   public static final class Kinematics {
 
     /* Robot mass in Kg. */
-    public static final double MASS = Units.lbsToKilograms(51.0); //Note: this weight includes the battery (but no bumpers yet)
+    public static final double MASS = Units.lbsToKilograms(106.0); //Note: this weight includes the battery (but no bumpers yet)
 
     /* Robot frame width in meters */
     public static final double WIDTH = Units.inchesToMeters(28.125);
@@ -183,16 +184,16 @@ public final class Constants {
   public static final class Elevator {
    
     //TODO: Need to test/tune these values
-    public static final double kElevatorKp = 0;
+    public static final double kElevatorKp = 2.0892;  //this value from sysId
     public static final double kElevatorKi = 0;
     public static final double kElevatorKd = 0;
 
-    //Feedforward values obtained via ReCalc:
+    //Feedforward values obtained via sysId:
     //https://www.reca.lc/linear?angle=%7B%22s%22%3A90%2C%22u%22%3A%22deg%22%7D&currentLimit=%7B%22s%22%3A38%2C%22u%22%3A%22A%22%7D&efficiency=90&limitAcceleration=0&limitDeceleration=0&limitVelocity=0&limitedAcceleration=%7B%22s%22%3A400%2C%22u%22%3A%22in%2Fs2%22%7D&limitedDeceleration=%7B%22s%22%3A50%2C%22u%22%3A%22in%2Fs2%22%7D&limitedVelocity=%7B%22s%22%3A10%2C%22u%22%3A%22in%2Fs%22%7D&load=%7B%22s%22%3A20%2C%22u%22%3A%22lbs%22%7D&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22NEO%22%7D&ratio=%7B%22magnitude%22%3A16%2C%22ratioType%22%3A%22Reduction%22%7D&spoolDiameter=%7B%22s%22%3A57.3%2C%22u%22%3A%22mm%22%7D&travelDistance=%7B%22s%22%3A27%2C%22u%22%3A%22in%22%7D   
-    public static final double kElevatorKs = 0.0; // volts (V)
-    public static final double kElevatorKg = 0.26; // volts (V)
-    public static final double kElevatorKv = 10.88; // volt per velocity (V/(m/s))
-    public static final double kElevatorKa = 0.03; // volt per acceleration (V/(m/s²))
+    public static final double kElevatorKs = 0.31762; // volts (V)
+    public static final double kElevatorKg = 0.3391; // volts (V)
+    public static final double kElevatorKv = 8.9139; // volt per velocity (V/(m/s))
+    public static final double kElevatorKa = 1.8096; // volt per acceleration (V/(m/s²))
 
     public static final double kElevatorGearing = 16.0;  //reduction
     public static final double kElevatorDrumRadius = Units.inchesToMeters(1.128);  //57.3 mm diameter

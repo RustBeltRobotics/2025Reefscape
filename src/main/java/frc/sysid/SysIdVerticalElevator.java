@@ -33,7 +33,7 @@ public class SysIdVerticalElevator extends SysIdSubsystem {
         leftMotor.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         leftEncoder = leftMotor.getEncoder();
 
-        rightMotor = new SparkMax(Constants.CanID.ELEVATOR_LEFT_MOTOR, MotorType.kBrushless);
+        rightMotor = new SparkMax(Constants.CanID.ELEVATOR_RIGHT_MOTOR, MotorType.kBrushless);
         //TODO: confirm if we should be inverting here or not
         SparkMaxConfig rightConfig = getConfig();
         rightConfig.follow(leftMotor, true);
@@ -45,8 +45,7 @@ public class SysIdVerticalElevator extends SysIdSubsystem {
              new SysIdRoutine.Config(
                 null,        // Use default ramp rate (1 V/s)
                 Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
-                null,        // Use default timeout (10 s)
-                            // Log state with Phoenix SignalLogger class
+                null,        // Use default timeout (10 s)s
                 null
             ),
             new SysIdRoutine.Mechanism(

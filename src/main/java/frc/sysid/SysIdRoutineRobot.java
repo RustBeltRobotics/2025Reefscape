@@ -20,7 +20,7 @@ public class SysIdRoutineRobot extends TimedRobot {
      * initialization code.
      */
     public SysIdRoutineRobot() {
-        SysIdSubsystem subsystemUnderTest = drivetrain;
+        SysIdSubsystem subsystemUnderTest = verticalElevator;
         
         // Bind full set of SysId routine tests to buttons; a complete routine should run each of these
         // once.
