@@ -8,6 +8,7 @@ import frc.robot.Constants.DriverStation;
 import frc.robot.commands.FieldOrientedDriveCommand;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Rejector;
 import frc.robot.subsystems.VisionSystem;
 import frc.robot.util.Utilities;
 
@@ -42,6 +43,7 @@ public class RobotContainer {
   private final CommandXboxController operatorController = new CommandXboxController(DriverStation.CONTROLLER_PORT_OPERATOR);
   private final Drivetrain drivetrain = new Drivetrain();
   private final Elevator elevator = new Elevator();
+  private final Rejector rejector = new Rejector();
   private final VisionSystem visionSystem;
 
   private final SendableChooser<Command> autoChooser;
@@ -96,6 +98,8 @@ public class RobotContainer {
 
     // DoubleSupplier elevatorSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
     // elevator.setDefaultCommand(elevator.elevatorVerticalXBoxControllerCommand(elevatorSpeedSupplier));
+    DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
+    rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
   }
 
   /**
