@@ -18,8 +18,8 @@ public class MultiGyro {
     // Pigeon2 connected over CAN
     private final Pigeon2 primary;
     private final AHRS secondary;  //navx
-    private final Alert primaryDisconnectedAlert = new Alert("Primary gyro (pigeon2) disconnected!", AlertType.kError);
-    private final Alert secondaryDisconnectedAlert = new Alert("Secondary gyro (navx) disconnected!", AlertType.kError);
+    private final Alert primaryInUseAlert = new Alert("Primary gyro (pigeon2) in use", AlertType.kInfo);
+    private final Alert secondaryInUseAlert = new Alert("Secondary gyro (navx) in use", AlertType.kInfo);
     private boolean primaryIsActive = true;
     private boolean secondaryIsActive = false;
 
@@ -34,18 +34,18 @@ public class MultiGyro {
         //navx auto-zeros after calibration completes
         secondary = new AHRS(AHRS.NavXComType.kMXP_SPI);
         if (!primaryIsActive) {
-            primaryDisconnectedAlert.set(true);
             secondaryIsActive = secondary.isConnected();
         }
         if (!secondaryIsActive) {
-            secondaryDisconnectedAlert.set(true);
         }
         if (!primaryIsActive && !secondaryIsActive) {
             throw new RuntimeException("RBR: No gyros are connected!");
         }
         if (primaryIsActive) {
+            primaryInUseAlert.set(true);
             DataLogManager.log("RBR: Gyro - using Pigeon2 as primary gyro");
         } else {
+            secondaryInUseAlert.set(true);
             DataLogManager.log("RBR: Gyro - using navX as primary gyro");
         }
     }

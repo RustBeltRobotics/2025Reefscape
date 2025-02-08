@@ -184,7 +184,7 @@ public final class Constants {
   public static final class Elevator {
    
     //TODO: Need to test/tune these values
-    public static final double kElevatorKp = 2.0892;  //this value from sysId
+    public static final double kElevatorKp = 2.0892;  //this value is sfrom sysId
     public static final double kElevatorKi = 0;
     public static final double kElevatorKd = 0;
 

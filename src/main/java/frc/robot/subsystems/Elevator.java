@@ -28,28 +28,22 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Elevator extends SubsystemBase {
 
-    private static ShuffleboardLayout verticalPidValuesEntry = Constants.Shuffleboard.DIAG_TAB
-            .getLayout("Elevator vertical PID", BuiltInLayouts.kList)
-            .withSize(2, 2);
-    private static GenericEntry kPEntry = verticalPidValuesEntry.add("kP", Constants.Elevator.kElevatorKp).getEntry();
-    private static GenericEntry kIEntry = verticalPidValuesEntry.add("kI", Constants.Elevator.kElevatorKi).getEntry();
-    private static GenericEntry kDEntry = verticalPidValuesEntry.add("kD", Constants.Elevator.kElevatorKd).getEntry();
-    private static GenericEntry kSEntry = verticalPidValuesEntry.add("kS", Constants.Elevator.kElevatorKs).getEntry();
-
+    // private static ShuffleboardLayout verticalPidValuesEntry = Constants.Shuffleboard.DIAG_TAB
+    //         .getLayout("Elevator vertical PID", BuiltInLayouts.kList)
+    //         .withSize(2, 2);
+            
     private static Map<ElevatorPosition, Double> elevatorPositionToSetpointMeters;
 
     //Left/Right are from the perspective of looking forward from the back of the robot towards the front (battery is back side of robot)
@@ -66,10 +60,10 @@ public class Elevator extends SubsystemBase {
     private double leftMotorEncoderPosition;
     private double tiltMotorOutputCurrentAmps;
     private double tiltMotorEncoderPosition;
-    private double ksVerticalElevator;
-    private double kpVerticalElevator;
-    private double kiVerticalElevator;
-    private double kdVerticalElevator;
+    private double ksVerticalElevator = Constants.Elevator.kElevatorKs;
+    private double kpVerticalElevator = Constants.Elevator.kElevatorKp;
+    private double kiVerticalElevator = Constants.Elevator.kElevatorKi;
+    private double kdVerticalElevator = Constants.Elevator.kElevatorKd;
 
     private DoublePublisher heightPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/Height").publish();
     private DoublePublisher leftMotorOutputCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/LeftMotor/Current").publish();
@@ -85,9 +79,13 @@ public class Elevator extends SubsystemBase {
         elevatorPositionToSetpointMeters.put(ElevatorPosition.L2, Constants.Elevator.POSITION_L2);
         elevatorPositionToSetpointMeters.put(ElevatorPosition.L3, Constants.Elevator.POSITION_L3);
         elevatorPositionToSetpointMeters.put(ElevatorPosition.L4, Constants.Elevator.POSITION_L4);
+
+        SmartDashboard.putNumber("elevatorKp", Constants.Elevator.kElevatorKp);
+        SmartDashboard.putNumber("elevatorKi", Constants.Elevator.kElevatorKi);
+        SmartDashboard.putNumber("elevatorKd", Constants.Elevator.kElevatorKd);
+        SmartDashboard.putNumber("elevatorKs", Constants.Elevator.kElevatorKs);
     }
 
-    //Note: because the elevator has a cascade design - it will move twice as far as the motor encoder output
     public Elevator() {
         leftMotor = new SparkMax(Constants.CanID.ELEVATOR_LEFT_MOTOR, MotorType.kBrushless);
         SparkMaxConfig leftMotorConfig = getVerticalMotorLeaderConfig(false, Constants.Elevator.kElevatorKp, Constants.Elevator.kElevatorKi, Constants.Elevator.kElevatorKd);
@@ -164,7 +162,7 @@ public class Elevator extends SubsystemBase {
         heightPublisher.set(getHeight());
 
         //this is for initial calculation of kS for ElevatorFeedForward
-        double smartDashboardKs = kSEntry.getDouble(Constants.Elevator.kElevatorKs);
+        double smartDashboardKs = SmartDashboard.getNumber("elevatorKs", Constants.Elevator.kElevatorKs);
         if (ksVerticalElevator != smartDashboardKs) {
             ksVerticalElevator = smartDashboardKs;
             new Alert("Elevator kS updated to: " + ksVerticalElevator, AlertType.kInfo).set(true);
@@ -173,9 +171,9 @@ public class Elevator extends SubsystemBase {
                 Constants.Elevator.kElevatorKa);
         }
 
-        double smartDashboardKp = kPEntry.getDouble(Constants.Elevator.kElevatorKp);
-        double smartDashboardKi = kIEntry.getDouble(Constants.Elevator.kElevatorKi);
-        double smartDashboardKd = kDEntry.getDouble(Constants.Elevator.kElevatorKd);
+        double smartDashboardKp = SmartDashboard.getNumber("elevatorKp", Constants.Elevator.kElevatorKp);
+        double smartDashboardKi = SmartDashboard.getNumber("elevatorKi", Constants.Elevator.kElevatorKi);
+        double smartDashboardKd = SmartDashboard.getNumber("elevatorKd", Constants.Elevator.kElevatorKd);
         boolean pidValuesChanged = false;
 
         if (kpVerticalElevator != smartDashboardKp) {
@@ -218,8 +216,7 @@ public class Elevator extends SubsystemBase {
             .outputRange(-1, 1)
             .maxMotion
             .maxVelocity(convertDistanceToEncoderRotations(Meters.of(1)).per(Second).in(RPM))
-            .maxAcceleration(convertDistanceToEncoderRotations(Meters.of(2)).per(Second).per(Second)
-                                    .in(RPM.per(Second)));
+            .maxAcceleration(convertDistanceToEncoderRotations(Meters.of(2)).per(Second).per(Second).in(RPM.per(Second)));
         sparkMaxConfig.smartCurrentLimit(Constants.CurrentLimit.SparkMax.SMART_ELEVATOR).secondaryCurrentLimit(Constants.CurrentLimit.SparkMax.SECONDARY_ELEVATOR);
 
         return sparkMaxConfig;
@@ -279,10 +276,11 @@ public class Elevator extends SubsystemBase {
     }
 
     public static Distance convertEncoderRotationsToDistance(Angle rotations) {
-        return Meters.of((rotations.in(Rotations) / Constants.Elevator.kElevatorGearing) * (Constants.Elevator.kElevatorDrumRadius * 2 * Math.PI));
+        //Note: the times(2) is because the elevator has a cascade design - it will move twice as far as the motor encoder output
+        return Meters.of((rotations.in(Rotations) / Constants.Elevator.kElevatorGearing) * (Constants.Elevator.kElevatorDrumRadius * 2 * Math.PI)).times(2.0);
     }
 
     public static Angle convertDistanceToEncoderRotations(Distance distance) {
-      return Rotations.of(distance.in(Meters) / (Constants.Elevator.kElevatorDrumRadius * 2 * Math.PI) * Constants.Elevator.kElevatorGearing);
+      return Rotations.of(distance.in(Meters) / (Constants.Elevator.kElevatorDrumRadius * 2 * Math.PI) * Constants.Elevator.kElevatorGearing).div(2.0);
     }
 }
