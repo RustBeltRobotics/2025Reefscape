@@ -32,7 +32,7 @@ import frc.robot.util.CollisionDetector;
 import frc.robot.vision.VisionPoseEstimationResult;
 
 /**
-	- Contains majority of logic for driving the robot / controls the 4 SwerveModule instance (one for each wheel)
+	- Contains majority of logic for driving the robot / controls the 4 SwerveModule instances (one for each wheel)
 	- Publishes robot pose and swerve module state data to network tables (for use by AdvantageScope / PathPlanner)
 	- Configures Auto chooser for selecting PathPlanner paths for Autonomous mode
 	- Reads Gyro readings for robot angle (yaw) and angular velocity (using CTRE Pigeon2)
@@ -41,7 +41,6 @@ import frc.robot.vision.VisionPoseEstimationResult;
  */
 public class Drivetrain extends SubsystemBase {
 
-    // Pigeon2 connected over CAN
     private final MultiGyro gyro;
 
     private final CollisionDetector collisionDetector;

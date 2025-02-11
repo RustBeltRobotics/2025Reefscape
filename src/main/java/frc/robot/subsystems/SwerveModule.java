@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Seconds;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -32,7 +35,7 @@ import frc.robot.util.Utilities;
 public class SwerveModule extends SubsystemBase {
 
     // Drive PID Constants
-    public static final double DRIVE_FEEDFORWARD_KS = 0.1759;  //from sysId - using Rotations as unit type, Simple as mechanism
+    public static final double DRIVE_FEEDFORWARD_KS = 0.1759;  //from sysId - using Meters as unit type, Simple as mechanism
     public static final double DRIVE_FEEDFORWARD_KV = 0.11294;  //from sysId
     public static final double DRIVE_FEEDFORWARD_KA = 0.0054209;  //from sysId
     public static final double DRIVE_P = 0.16367; //from sysId using CTRE phoenix 6 preset
@@ -107,13 +110,13 @@ public class SwerveModule extends SubsystemBase {
         // Gear ratio
         driveConfig.Feedback.SensorToMechanismRatio = 1.0; // 1:1 sensor to mechanism ratio (conversion factor is handled explicitly in code)
 
-        // Current limits
+        // Current limits - note total power budget of approx 250 Amps for 12v battery
+        driveConfig.CurrentLimits.withSupplyCurrentLowerLimit(Amps.of(70)) // Default limit of 70 A
+            .withSupplyCurrentLimit(Amps.of(40)) // Reduce the limit to 40 A if we've limited to 70 A...
+            .withSupplyCurrentLowerTime(Seconds.of(1.0)) // ...for at least 1 second
+            .withSupplyCurrentLimitEnable(true); // And enable it
         driveConfig.CurrentLimits.StatorCurrentLimit = 120; // 120A stator current limit
         driveConfig.CurrentLimits.StatorCurrentLimitEnable = true; // Enable stator current limiting
-
-        driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = +60;
-        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -60;
-        driveConfig.TorqueCurrent.TorqueNeutralDeadband = 0.05; // 5% torque neutral deadband
 
         return driveConfig;
     }

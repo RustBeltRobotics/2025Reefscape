@@ -43,12 +43,11 @@ public class RobotContainer {
   private final CommandXboxController operatorController = new CommandXboxController(DriverStation.CONTROLLER_PORT_OPERATOR);
   private final Drivetrain drivetrain = new Drivetrain();
   private final Elevator elevator = new Elevator();
-  private final Rejector rejector = new Rejector();
+  // private final Rejector rejector = new Rejector();
   private final VisionSystem visionSystem;
 
   private final SendableChooser<Command> autoChooser;
   private final SendableChooser<Integer> startingPosisitonChooser = new SendableChooser<>();
-
 
   /** The container for the robot. Contains subsystems, IO devices, and commands. */
   public RobotContainer() {
@@ -96,10 +95,10 @@ public class RobotContainer {
     DoubleSupplier rotationSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getRightX(), 1.0, 0.05) * Constants.Kinematics.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND * MAX_SPEED_FACTOR;
     drivetrain.setDefaultCommand(new FieldOrientedDriveCommand(drivetrain, translationXSupplier, translationYSupplier, rotationSupplier));
 
-    // DoubleSupplier elevatorSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
-    // elevator.setDefaultCommand(elevator.elevatorVerticalXBoxControllerCommand(elevatorSpeedSupplier));
-    DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
-    rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
+    DoubleSupplier elevatorTiltSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
+    elevator.setDefaultCommand(elevator.elevatorTiltXBoxControllerCommand(elevatorTiltSpeedSupplier));
+    // DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
+    // rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
   }
 
   /**

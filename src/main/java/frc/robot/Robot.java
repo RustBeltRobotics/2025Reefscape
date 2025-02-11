@@ -10,6 +10,7 @@ import org.littletonrobotics.urcl.URCL;
 
 import com.ctre.phoenix6.SignalLogger;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -18,6 +19,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.hardware.PowerManagement;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -29,6 +31,7 @@ public class Robot extends TimedRobot {
 
   private Command autonomousCommand;
   private RobotContainer robotContainer;
+  private final PowerManagement powerManagement;
   private GenericEntry timeEntry = Constants.Shuffleboard.COMPETITION_TAB.add("Time Left", 0.0)
             .withWidget(BuiltInWidgets.kNumberBar)
             .withPosition(3, 0)
@@ -43,6 +46,8 @@ public class Robot extends TimedRobot {
     // autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
 
+    powerManagement = new PowerManagement();
+    
     // Start datalogging of all networkTables entrys onto the RIO - see DataLogManager class javadoc - strongly recommended to attach a USB stick to the RIO for persisting log data
     // See https://docs.wpilib.org/en/stable/docs/software/telemetry/datalog.html for more information
     DataLogManager.start();
@@ -56,6 +61,9 @@ public class Robot extends TimedRobot {
 
     // Log Rev device signals (see https://github.com/Mechanical-Advantage/AdvantageScope/blob/main/docs/REV-LOGGING.md)
     URCL.start();
+
+    //Camera server is used to view USB cam as video stream on dashboard
+    CameraServer.startAutomaticCapture();
 
     //allow access to photonvision coprocessor (orange pi) UIs when tethered to USB port on the rio
     // PortForwarder.add(5800, "photonvision1.local", 5800);
@@ -86,6 +94,7 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
     timeEntry.setDouble(DriverStation.getMatchTime()); // Update the time left in shuffleboard
+    powerManagement.updateTelemetry(); //check for brownouts and breaker faults on the PDH
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
