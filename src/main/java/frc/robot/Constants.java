@@ -41,7 +41,6 @@ public final class Constants {
    * CAN bus IDs
    */
   public static final class CanID {
-    //Power
     public static final int POWER_DISTRIBUTION = 1;
     public static final int PIGEON_GYRO = 10;
     public static final int ELEVATOR_LEFT_MOTOR = 14;
@@ -184,23 +183,25 @@ public final class Constants {
   public static final class Elevator {
    
     //TODO: Need to test/tune these values
-    public static final double kElevatorKp = 2.0892;  //this value is sfrom sysId
+    public static final double kElevatorKp = 2.0892;  //this value is from sysId
     public static final double kElevatorKi = 0;
     public static final double kElevatorKd = 0;
 
     //Feedforward values obtained via sysId:
     //https://www.reca.lc/linear?angle=%7B%22s%22%3A90%2C%22u%22%3A%22deg%22%7D&currentLimit=%7B%22s%22%3A38%2C%22u%22%3A%22A%22%7D&efficiency=90&limitAcceleration=0&limitDeceleration=0&limitVelocity=0&limitedAcceleration=%7B%22s%22%3A400%2C%22u%22%3A%22in%2Fs2%22%7D&limitedDeceleration=%7B%22s%22%3A50%2C%22u%22%3A%22in%2Fs2%22%7D&limitedVelocity=%7B%22s%22%3A10%2C%22u%22%3A%22in%2Fs%22%7D&load=%7B%22s%22%3A20%2C%22u%22%3A%22lbs%22%7D&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22NEO%22%7D&ratio=%7B%22magnitude%22%3A16%2C%22ratioType%22%3A%22Reduction%22%7D&spoolDiameter=%7B%22s%22%3A57.3%2C%22u%22%3A%22mm%22%7D&travelDistance=%7B%22s%22%3A27%2C%22u%22%3A%22in%22%7D   
-    public static final double kElevatorKs = 0.31762; // volts (V)
-    public static final double kElevatorKg = 0.3391; // volts (V)
-    public static final double kElevatorKv = 8.9139; // volt per velocity (V/(m/s))
-    public static final double kElevatorKa = 1.8096; // volt per acceleration (V/(m/s²))
+    public static final double kElevatorKs = 0.18006; // volts (V)
+    public static final double kElevatorKg = 0.18493; // volts (V)
+    public static final double kElevatorKv = 5.3925; // volt per velocity (V/(m/s))
+    public static final double kElevatorKa = 0.46421; // volt per acceleration (V/(m/s²))
 
     public static final double kElevatorGearing = 16.0;  //reduction
     public static final double kElevatorDrumRadius = Units.inchesToMeters(1.128);  //57.3 mm diameter
+    public static final double kElevatorDrumCircumference = kElevatorDrumRadius * 2.0 * Math.PI;
     public static final double kCarriageMass = Units.lbsToKilograms(20.0);
 
     public static final double kMinElevatorHeightMeters = 0.0;
-    public static final double kMaxElevatorHeightMeters = Units.inchesToMeters(27.0);
+    // public static final double kMaxElevatorHeightMeters = Units.inchesToMeters(27.0);  (27" * 2 for the cascade)
+    public static final double kMaxElevatorHeightMeters = Units.inchesToMeters(54.0); // ~ 1.3716 meterss
 
     public static final double kTiltGearing = 75.0;  //reduction
 
@@ -210,6 +211,13 @@ public final class Constants {
     public static final double POSITION_L2 = Units.inchesToMeters(12.0);
     public static final double POSITION_L3 = Units.inchesToMeters(18.0);
     public static final double POSITION_L4 = Units.inchesToMeters(24.0);
+
+    /** Conversion between motor rotations and elevator belt distance in meters */
+    //Note: multiply by 2.0 to account for cascade design, which doubles the distance traveled
+    public static final double POSITION_CONVERSION = kElevatorDrumCircumference * (1.0 / kElevatorGearing) * 2.0;
+        
+    /** Conversion between motor rotations per minute and elevator velocity in meters per second */
+    public static final double VELOCITY_CONVERSION = POSITION_CONVERSION / BasicUnits.SECONDS_PER_MINUTE;
   }
 
   public static final class PathPlanner {

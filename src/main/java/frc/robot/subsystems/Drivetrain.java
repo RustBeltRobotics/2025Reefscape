@@ -93,6 +93,16 @@ public class Drivetrain extends SubsystemBase {
     private DoublePublisher backLeftAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/BL").publish();
     private DoublePublisher backRightAbsoluteEncoderPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Rotation/Absolute/BR").publish();
 
+    private DoublePublisher frontLeftTorqueCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Current/Torque/FL").publish();
+    private DoublePublisher frontRightTorqueCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Current/Torque/FR").publish();
+    private DoublePublisher backLeftTorqueCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Current/Torque/BL").publish();
+    private DoublePublisher backRightTorqueCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Current/Torque/BR").publish();
+
+    private DoublePublisher frontLeftStatorCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Current/Stator/FL").publish();
+    private DoublePublisher frontRightStatorCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Current/Stator/FR").publish();
+    private DoublePublisher backLeftStatorCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Current/Stator/BL").publish();
+    private DoublePublisher backRightStatorCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Swerve/Current/Stator/BR").publish();
+
     private DoublePublisher linearAccelerationXPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/X").publish();
     private DoublePublisher linearAccelerationYPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/Y").publish();
 
@@ -369,6 +379,16 @@ public class Drivetrain extends SubsystemBase {
         frontRightAbsoluteEncoderPublisher.set(frontRightModule.getAbsolutePosition());
         backLeftAbsoluteEncoderPublisher.set(backLeftModule.getAbsolutePosition());
         backRightAbsoluteEncoderPublisher.set(backRightModule.getAbsolutePosition());
+
+        frontLeftTorqueCurrentPublisher.set(frontLeftModule.getDriveTorqueCurrent());
+        frontRightTorqueCurrentPublisher.set(frontRightModule.getDriveTorqueCurrent());
+        backLeftTorqueCurrentPublisher.set(backLeftModule.getDriveTorqueCurrent());
+        backRightTorqueCurrentPublisher.set(backRightModule.getDriveTorqueCurrent());
+
+        frontLeftStatorCurrentPublisher.set(frontLeftModule.getStatorCurrent());
+        frontRightStatorCurrentPublisher.set(frontRightModule.getStatorCurrent());
+        backLeftStatorCurrentPublisher.set(backLeftModule.getStatorCurrent());
+        backRightStatorCurrentPublisher.set(backRightModule.getStatorCurrent());
 
         linearAccelerationXPublisher.set(collisionDetector.getCurrentLinearAccelerationX());
         linearAccelerationYPublisher.set(collisionDetector.getCurrentLinearAccelerationY());

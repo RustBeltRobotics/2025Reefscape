@@ -111,10 +111,15 @@ public class SwerveModule extends SubsystemBase {
         driveConfig.Feedback.SensorToMechanismRatio = 1.0; // 1:1 sensor to mechanism ratio (conversion factor is handled explicitly in code)
 
         // Current limits - note total power budget of approx 250 Amps for 12v battery
-        driveConfig.CurrentLimits.withSupplyCurrentLowerLimit(Amps.of(70)) // Default limit of 70 A
-            .withSupplyCurrentLimit(Amps.of(40)) // Reduce the limit to 40 A if we've limited to 70 A...
-            .withSupplyCurrentLowerTime(Seconds.of(1.0)) // ...for at least 1 second
-            .withSupplyCurrentLimitEnable(true); // And enable it
+
+        // driveConfig.CurrentLimits.withSupplyCurrentLowerLimit(Amps.of(70)) // Default limit of 70 A
+        //     .withSupplyCurrentLimit(Amps.of(40)) // Reduce the limit to 40 A if we've limited to 70 A...
+        //     .withSupplyCurrentLowerTime(Seconds.of(1.0)) // ...for at least 1 second
+        //     .withSupplyCurrentLimitEnable(true); // And enable it
+
+        driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = 40;
+        driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -40;
+
         driveConfig.CurrentLimits.StatorCurrentLimit = 120; // 120A stator current limit
         driveConfig.CurrentLimits.StatorCurrentLimitEnable = true; // Enable stator current limiting
 
@@ -195,6 +200,14 @@ public class SwerveModule extends SubsystemBase {
      */
     public SwerveModuleState getStateRotationConstrained() {
         return new SwerveModuleState(getDriveVelocity(), Rotation2d.fromDegrees(getSteerPositionConstrained()));
+    }
+
+    public double getDriveTorqueCurrent() {
+        return driveMotor.getTorqueCurrent().getValueAsDouble();
+    }
+
+    public double getStatorCurrent() {
+        return driveMotor.getStatorCurrent().getValueAsDouble();
     }
 
     /**

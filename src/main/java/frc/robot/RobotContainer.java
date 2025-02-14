@@ -35,10 +35,6 @@ public class RobotContainer {
   // For limiting maximum speed (1.0 = 100% - full speed)
   private static final double MAX_SPEED_FACTOR = 1.0;
 
-  // TODO: ** utilize design ideas in this post:  https://www.chiefdelphi.com/t/command-based-best-practices-for-2025-community-feedback/465602/143
-  // For examples on structuring Subsystems, triggers and commands, see: 
-  // https://github.com/wpilibsuite/allwpilib/tree/main/wpilibjExamples/src/main/java/edu/wpi/first/wpilibj/examples/rapidreactcommandbot
-
   private final CommandXboxController driverController = new CommandXboxController(DriverStation.CONTROLLER_PORT_DRIVER);
   private final CommandXboxController operatorController = new CommandXboxController(DriverStation.CONTROLLER_PORT_OPERATOR);
   private final Drivetrain drivetrain = new Drivetrain();
@@ -87,6 +83,9 @@ public class RobotContainer {
     driverController.x().onTrue(elevator.elevatorTestVerticalSetpointCommand());
     //Pressing Y button stops elevator / moves it to bottom position
     driverController.y().onTrue(elevator.elevatorVerticalStopCommand());
+
+    operatorController.a().onTrue(elevator.tiltOutCommand());
+    operatorController.b().onTrue(elevator.tiltInCommand());
   }
 
   private void setDefaultCommands() {

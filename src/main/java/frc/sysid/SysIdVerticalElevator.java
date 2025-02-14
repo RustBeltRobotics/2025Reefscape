@@ -2,6 +2,8 @@ package frc.sysid;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.function.BooleanSupplier;
+
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -17,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants;
-import frc.robot.subsystems.Elevator;
 
 public class SysIdVerticalElevator extends SysIdSubsystem {
 
@@ -25,20 +26,25 @@ public class SysIdVerticalElevator extends SysIdSubsystem {
     private final RelativeEncoder leftEncoder;
     private final SparkMax rightMotor;
     private final RelativeEncoder rightEncoder;
+    private final BooleanSupplier stopIfNearingMaxHeight;
 
     public SysIdVerticalElevator() {
         leftMotor = new SparkMax(Constants.CanID.ELEVATOR_LEFT_MOTOR, MotorType.kBrushless);
-        //TODO: confirm if we should be inverting here or not
         SparkMaxConfig leftConfig = getConfig();
         leftMotor.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         leftEncoder = leftMotor.getEncoder();
 
         rightMotor = new SparkMax(Constants.CanID.ELEVATOR_RIGHT_MOTOR, MotorType.kBrushless);
-        //TODO: confirm if we should be inverting here or not
         SparkMaxConfig rightConfig = getConfig();
         rightConfig.follow(leftMotor, true);
         rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         rightEncoder = rightMotor.getEncoder();
+
+        stopIfNearingMaxHeight = () -> {
+            double currentHeight = leftEncoder.getPosition();
+            
+            return currentHeight > (Constants.Elevator.kMaxElevatorHeightMeters - Units.inchesToMeters(2));
+        };
 
         // Create a new SysId routine for characterizing the drive.
         m_sysIdRoutine = new SysIdRoutine(
@@ -60,12 +66,12 @@ public class SysIdVerticalElevator extends SysIdSubsystem {
                     // Record a frame for the motors.
                     log.motor("elevator-left")
                         .voltage(m_appliedVoltage.mut_replace(leftMotor.getAppliedOutput() * leftMotor.getBusVoltage(), Volts))
-                        .linearPosition(m_distance.mut_replace(Elevator.convertEncoderRotationsToDistance(Rotations.of(leftEncoder.getPosition())).in(Meters), Meters))
-                        .linearVelocity(m_velocity.mut_replace(Elevator.convertEncoderRotationsToDistance(Rotations.of(leftEncoder.getVelocity())).per(Minute).in(MetersPerSecond), MetersPerSecond));
+                        .linearPosition(m_distance.mut_replace(leftEncoder.getPosition(), Meters))
+                        .linearVelocity(m_velocity.mut_replace(leftEncoder.getVelocity(), MetersPerSecond));
                     log.motor("elevator-right")
                         .voltage(m_appliedVoltage.mut_replace(rightMotor.getAppliedOutput() * rightMotor.getBusVoltage(), Volts))
-                        .linearPosition(m_distance.mut_replace(Elevator.convertEncoderRotationsToDistance(Rotations.of(rightEncoder.getPosition())).in(Meters), Meters))
-                        .linearVelocity(m_velocity.mut_replace(Elevator.convertEncoderRotationsToDistance(Rotations.of(rightEncoder.getVelocity())).per(Minute).in(MetersPerSecond), MetersPerSecond));
+                        .linearPosition(m_distance.mut_replace(rightEncoder.getPosition(), Meters))
+                        .linearVelocity(m_velocity.mut_replace(rightEncoder.getVelocity(), MetersPerSecond));
                 },
                 // Tell SysId to make generated commands require this subsystem, suffix test state in
                 // WPILog with this subsystem's name
@@ -82,35 +88,26 @@ public class SysIdVerticalElevator extends SysIdSubsystem {
     
     @Override
     public Command sysIdDynamic(Direction direction) {
-        return Commands.sequence(
-            resetEncodersCommand(),
-            m_sysIdRoutine.dynamic(direction)
-            .until(() -> {
-                double currentHeight = Elevator.convertEncoderRotationsToDistance(Rotations.of(leftEncoder.getPosition())).in(Meters);
-
-                return currentHeight > (Constants.Elevator.kMaxElevatorHeightMeters - Units.inchesToMeters(2));
-            })
-        );
+        if (direction == Direction.kForward) {
+            return Commands.sequence(resetEncodersCommand(), m_sysIdRoutine.dynamic(direction).until(stopIfNearingMaxHeight));
+        } else {
+            return m_sysIdRoutine.dynamic(direction).until(stopIfNearingMaxHeight);
+        }
     }
-
-
 
     @Override
     public Command sysIdQuasistatic(Direction direction) {
-        return Commands.sequence(
-            resetEncodersCommand(),
-            m_sysIdRoutine.quasistatic(direction)
-            .until(() -> {
-                double currentHeight = Elevator.convertEncoderRotationsToDistance(Rotations.of(leftEncoder.getPosition())).in(Meters);
-                
-                return currentHeight > (Constants.Elevator.kMaxElevatorHeightMeters - Units.inchesToMeters(2));
-            })
-        );
+        if (direction == Direction.kForward) {
+            return Commands.sequence(resetEncodersCommand(), m_sysIdRoutine.quasistatic(direction).until(stopIfNearingMaxHeight));
+        } else {
+            return m_sysIdRoutine.quasistatic(direction).until(stopIfNearingMaxHeight);
+        }
     }
 
     private SparkMaxConfig getConfig() {
         SparkMaxConfig sparkMaxConfig = new SparkMaxConfig();
         sparkMaxConfig.inverted(false).idleMode(IdleMode.kBrake);
+        sparkMaxConfig.encoder.positionConversionFactor(Constants.Elevator.POSITION_CONVERSION).velocityConversionFactor(Constants.Elevator.VELOCITY_CONVERSION);
         sparkMaxConfig.smartCurrentLimit(Constants.CurrentLimit.SparkMax.SMART_ELEVATOR).secondaryCurrentLimit(Constants.CurrentLimit.SparkMax.SECONDARY_ELEVATOR);
 
         return sparkMaxConfig;

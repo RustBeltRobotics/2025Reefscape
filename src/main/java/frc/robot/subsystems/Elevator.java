@@ -60,6 +60,8 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
             
     private static Map<ElevatorPosition, Double> elevatorPositionToSetpointMeters;
 
+    private final Alert debugMsgAlert = new Alert("Elevator debug: ", AlertType.kInfo);
+
     //Left/Right are from the perspective of looking forward from the back of the robot towards the front (battery is back side of robot)
     //these are for up/down motion of the elevator
     private final SparkMax leftMotor;
@@ -142,7 +144,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         tiltEncoder = tiltMotor.getEncoder();
 
         //this assumes the elevator is at the bottom and tilted inwards (inside robot frame) when the robot is powered on
-        resetElevatorEncoders();
+        resetAllEncoders();
 
         if (Robot.isSimulation()) {
             verticalElevatorSimGearbox = DCMotor.getNEO(2);
@@ -208,7 +210,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         //TODO: verify applying negative voltage will move the elevator down
         return this.run(() -> leftMotor.setVoltage(-1.0))
             .until(() -> leftMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR) //current will jump up when the elevator hits the bottom and cannot move further down
-            .finallyDo(() -> resetElevatorEncoders());
+            .finallyDo(() -> resetVerticalElevatorEncoders());
     }
 */
 
@@ -328,12 +330,16 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         rightMotor.stopMotor();
     }
 
-    public void tiltOut() {
-        //TODO: implement - extend the mechanism forwards out beyond the frame perimeter to put elevator in vertical positions
+    public Command tiltOutCommand() {
+        //extend the mechanism forwards out beyond the frame perimeter to put elevator in vertical position
+        return this.run(() -> tiltMotor.set(-0.4))
+        .until(() -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && Math.abs(tiltMotorEncoderVelocity) < 0.05);
     }
 
-    public void tiltIn() {
-        //TODO: implement - retract the mechanism back into the frame perimeter 
+    public Command tiltInCommand() {
+        //retract the mechanism back into the frame perimeter 
+        return this.run(() -> tiltMotor.set(0.4))
+        .until(() -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && tiltMotorEncoderVelocity < 0.05);
     }
 
     /**
@@ -354,11 +360,19 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         // );
     }
 
-    private void resetElevatorEncoders() {
+    private void resetAllEncoders() {
+        resetTiltEncoder();
+        resetVerticalElevatorEncoders();
+    }
+
+    private void resetTiltEncoder() {
+        tiltEncoder.setPosition(0.0);
+    }
+
+    private void resetVerticalElevatorEncoders() {
         verticalProfiledPidController.setGoal(0.0);
         leftEncoder.setPosition(0.0);
         rightEncoder.setPosition(0.0);
-        tiltEncoder.setPosition(0.0);
     }
 /* 
     public static double getDistanceInMetersForEncoderRotations(double rotations) {

@@ -25,6 +25,8 @@ public class PowerManagement {
             brownoutAlert.set(true);
         }
 
+        //TODO: Create a Map of PDH channel IDs to CAN devices
+
         for (int channel = 0; channel < NUM_PDH_CHANNELS; channel++) {
             if (powerDistributionHub.getFaults().getBreakerFault(channel)) {
                 new Alert("PDH Breaker fault detected on channel " + channel + " - current = " + powerDistributionHub.getCurrent(channel), AlertType.kWarning).set(true);
