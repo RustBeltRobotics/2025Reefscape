@@ -6,6 +6,8 @@ package frc.robot;
 
 import frc.robot.Constants.DriverStation;
 import frc.robot.commands.FieldOrientedDriveCommand;
+import frc.robot.commands.ScoreCoralCommand;
+import frc.robot.model.ElevatorPosition;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rejector;
@@ -60,7 +62,7 @@ public class RobotContainer {
     }
 
     setDefaultCommands();
-    // Configure the trigger bindings
+    // Configure the trigger binding
     configureBindings();
 
     //TODO: register NamedCommands for pathplanner
@@ -79,7 +81,12 @@ public class RobotContainer {
    */
   private void configureBindings() {
     // TODO: MJR
-    
+    // Pressing a butten sets coral droper hight
+    operatorController.a().onTrue(new ScoreCoralCommand(elevator, rejector, ElevatorPosition.L2));
+    operatorController.b().onTrue(new ScoreCoralCommand(elevator, rejector, ElevatorPosition.L3));
+    operatorController.x().onTrue(new ScoreCoralCommand(elevator, rejector, ElevatorPosition.L1));
+    operatorController.y().onTrue(new ScoreCoralCommand(elevator, rejector, ElevatorPosition.L4));
+
     // Pressing A button sets forward direction to current robot heading
     driverController.a().onTrue(drivetrain.zeroPoseEstimatorAngleCommand());
     //Pressing B button applies kS voltage to the elevator vertical motors (this is for testing / determining proper kS value)

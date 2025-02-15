@@ -209,6 +209,11 @@ public class Elevator extends SubsystemBase {
         return run(() -> reachVerticalGoal(goalInMeters));
     }
 
+    private void getSetVerticalGoal(ElevatorPosition goalPosition) {
+        double goalInMeters = elevatorPositionToSetpointMeters.get(goalPosition);
+        reachVerticalGoal(goalInMeters);
+    }
+
     private SparkMaxConfig getVerticalMotorLeaderConfig(boolean invert, double kP, double kI, double kD) {
         SparkMaxConfig sparkMaxConfig = new SparkMaxConfig();
         sparkMaxConfig.inverted(invert).idleMode(IdleMode.kBrake);
@@ -284,5 +289,8 @@ public class Elevator extends SubsystemBase {
 
     public static Angle convertDistanceToEncoderRotations(Distance distance) {
       return Rotations.of(distance.in(Meters) / (Constants.Elevator.kElevatorDrumRadius * 2 * Math.PI) * Constants.Elevator.kElevatorGearing);
+    }
+    public void scoreCoral(ElevatorPosition level) {
+        getSetVerticalGoal(level);
     }
 }
