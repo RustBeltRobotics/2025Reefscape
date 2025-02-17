@@ -183,16 +183,16 @@ public final class Constants {
   public static final class Elevator {
    
     //TODO: Need to test/tune these values
-    public static final double kElevatorKp = 2.0892;  //this value is from sysId
+    public static final double kElevatorKp = 37.162;  //this value is from sysId
     public static final double kElevatorKi = 0;
-    public static final double kElevatorKd = 0;
+    public static final double kElevatorKd = 4.6669;
 
     //Feedforward values obtained via sysId:
     //https://www.reca.lc/linear?angle=%7B%22s%22%3A90%2C%22u%22%3A%22deg%22%7D&currentLimit=%7B%22s%22%3A38%2C%22u%22%3A%22A%22%7D&efficiency=90&limitAcceleration=0&limitDeceleration=0&limitVelocity=0&limitedAcceleration=%7B%22s%22%3A400%2C%22u%22%3A%22in%2Fs2%22%7D&limitedDeceleration=%7B%22s%22%3A50%2C%22u%22%3A%22in%2Fs2%22%7D&limitedVelocity=%7B%22s%22%3A10%2C%22u%22%3A%22in%2Fs%22%7D&load=%7B%22s%22%3A20%2C%22u%22%3A%22lbs%22%7D&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22NEO%22%7D&ratio=%7B%22magnitude%22%3A16%2C%22ratioType%22%3A%22Reduction%22%7D&spoolDiameter=%7B%22s%22%3A57.3%2C%22u%22%3A%22mm%22%7D&travelDistance=%7B%22s%22%3A27%2C%22u%22%3A%22in%22%7D   
-    public static final double kElevatorKs = 0.18006; // volts (V)
-    public static final double kElevatorKg = 0.18493; // volts (V)
-    public static final double kElevatorKv = 5.3925; // volt per velocity (V/(m/s))
-    public static final double kElevatorKa = 0.46421; // volt per acceleration (V/(m/s²))
+    public static final double kElevatorKs = 0.23208; // volts (V)
+    public static final double kElevatorKg = 0.25558; // volts (V)
+    public static final double kElevatorKv = 5.4308; // volt per velocity (V/(m/s))
+    public static final double kElevatorKa = 0.4605; // volt per acceleration (V/(m/s²))
 
     public static final double kElevatorGearing = 16.0;  //reduction
     public static final double kElevatorDrumRadius = Units.inchesToMeters(1.128);  //57.3 mm diameter
