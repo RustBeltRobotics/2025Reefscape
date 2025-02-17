@@ -5,13 +5,16 @@
 package frc.robot;
 
 import frc.robot.Constants.DriverStation;
+import frc.robot.commands.DefaultClimbCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Rejector;
 import frc.robot.subsystems.VisionSystem;
 import frc.robot.util.Utilities;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -40,9 +43,19 @@ public class RobotContainer {
   private final Drivetrain drivetrain = new Drivetrain();
   private final Elevator elevator = new Elevator();
   // private final Rejector rejector = new Rejector();
+  private final Climber climber = new Climber();
   private final VisionSystem visionSystem;
 
   private final SendableChooser<Command> autoChooser;
+
+  /*
+   * TODO: if possible, I think we should remove startingPositionChooser, and try
+   * to use vision info to provide this instead. Last year we used
+   * startingPositionChooser because the robot couldn't see april tags at the
+   * start of the auto, and because the base of the speaker provided an accurate
+   * and reliable hardstop. This year, I think its the opposite - we will be able
+   * to see apriltags, and we won't have a reliable hardstop.
+   */
   private final SendableChooser<Integer> startingPosisitonChooser = new SendableChooser<>();
 
   /** The container for the robot. Contains subsystems, IO devices, and commands. */
@@ -98,6 +111,9 @@ public class RobotContainer {
     elevator.setDefaultCommand(elevator.elevatorTiltXBoxControllerCommand(elevatorTiltSpeedSupplier));
     // DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
     // rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
+
+    BooleanSupplier bzClimberSupplier = () -> operatorController.povUp().getAsBoolean();
+    climber.setDefaultCommand(new DefaultClimbCommand(climber, bzClimberSupplier));
   }
 
   /**
@@ -112,12 +128,17 @@ public class RobotContainer {
   public void configureAutos() {
     Constants.Shuffleboard.COMPETITION_TAB.add("auto machine", autoChooser).withPosition(0, 0).withSize(2, 1);
 
+
     startingPosisitonChooser.addOption("1", 1);
     startingPosisitonChooser.addOption("2", 2);
     startingPosisitonChooser.addOption("3", 3);
     Constants.Shuffleboard.COMPETITION_TAB.add("where am I?", startingPosisitonChooser).withPosition(2, 0);
   }
 
+  // TODO: I forget what the use-case was, but a student had an idea for vibrating
+  // only the left or right side, to indicate one of two different things. At some
+  // point, we should test out how detectable this is by the driver(s)
+  
   //MJR: TODO: If we end up needing this, call it like something like this:
     // new InstantCommand(() -> rumbleControllers(true)).andThen(new WaitCommand(1.0)).finallyDo(() -> rumbleControllers(false));
   public void rumbleControllers(boolean rumble) {

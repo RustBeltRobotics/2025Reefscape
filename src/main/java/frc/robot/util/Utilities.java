@@ -15,6 +15,8 @@ public class Utilities {
      * 
      * @param value The value you want to modify
      * @return The filtered value
+     * 
+     * FIXME: Matt: I recommend we remove this, as it is arguably obselete by the generic version below.
      */
     public static double modifyAxis(double value) {
         // Deadband
@@ -46,6 +48,8 @@ public class Utilities {
     }
     /*
      * I didnt write this and i dont remember what it does
+     * FIXME: Matt: I recommend we remove this if we don't remember what it does.
+     * For what its worth, we're not currently using it.
      */
     public static double reboundValue(double value, double anchor){
         double lowerBound = anchor - 180;
@@ -61,6 +65,7 @@ public class Utilities {
 
     public static void verifySparkMaxStatus(REVLibError revResult, int canID, String deviceName, String operation) {
         if (revResult != REVLibError.kOk) {
+            //FIXME: Matt - I know nothing about resource leaks, but it sounds bad?
             new Alert(deviceName + " SparkMax with CAN ID: " + canID + " failed " + operation + "! Result = " + revResult.toString(), AlertType.kError).set(true);
             System.out.println("Error configuring drive motor: " + revResult);
         }
