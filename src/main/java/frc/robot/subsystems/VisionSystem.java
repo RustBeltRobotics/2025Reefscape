@@ -74,6 +74,7 @@ public class VisionSystem {
      */
 
     public VisionSystem() {
+        //TODO: if the venue is not using the default welded field layout and is instead using AndyMark, update this to AprilTagFields.k2025ReefscapeAndyMark
         fieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
         fieldLayout.setOrigin(OriginPosition.kBlueAllianceWallRightSide);
 
@@ -202,9 +203,9 @@ public class VisionSystem {
             if (!usedAprilTagsForCamera.isEmpty()) {
                 // Do not use pose if robot pose is off the field 
                 if (estimatedPose.getX() < -Constants.Game.FIELD_POSE_XY_ERROR_MARGIN_METERS
-                    || estimatedPose.getX() > Constants.Game.FIELD_LENGTH_METERS + Constants.Game.FIELD_POSE_XY_ERROR_MARGIN_METERS
+                    || estimatedPose.getX() > fieldLayout.getFieldLength() + Constants.Game.FIELD_POSE_XY_ERROR_MARGIN_METERS
                     || estimatedPose.getY() < -Constants.Game.FIELD_POSE_XY_ERROR_MARGIN_METERS
-                    || estimatedPose.getY() > Constants.Game.FIELD_WIDTH_METERS + Constants.Game.FIELD_POSE_XY_ERROR_MARGIN_METERS) {
+                    || estimatedPose.getY() > fieldLayout.getFieldWidth() + Constants.Game.FIELD_POSE_XY_ERROR_MARGIN_METERS) {
                         rejectedPoses.add(poseEstimate);
                         return;
                 }

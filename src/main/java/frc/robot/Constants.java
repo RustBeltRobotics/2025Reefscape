@@ -42,11 +42,12 @@ public final class Constants {
    */
   public static final class CanID {
     public static final int POWER_DISTRIBUTION = 1;
+    public static final int CLIMBER_MOTOR = 19;
     public static final int PIGEON_GYRO = 10;
     public static final int ELEVATOR_LEFT_MOTOR = 14;
     public static final int ELEVATOR_RIGHT_MOTOR = 16;
     public static final int ELEVATOR_EXTEND_RETRACT_MOTOR = 12;
-    public static final int REJECTOR_MOTOR = 19;
+    public static final int REJECTOR_MOTOR = 20;
     public static final int SWERVE_MODULE_FRONT_LEFT_DRIVE_MOTOR = 6;
     public static final int SWERVE_MODULE_FRONT_LEFT_STEER_MOTOR = 13;
     public static final int SWERVE_MODULE_FRONT_LEFT_STEER_ENCODER = 2;
@@ -73,7 +74,6 @@ public final class Constants {
     }
 
     public static final class Neo {
-      public static final double FREE_SPEED_RPMS = 5676.0;
       public static final int SMART = 60;
       public static final int SECONDARY = 80;
     }
@@ -296,9 +296,6 @@ public final class Constants {
   }
 
   public static final class Game {
-    //Note: field layout values can be obtained by examining the AprilTagFieldLayout .json file for the game
-    public static final double FIELD_LENGTH_METERS = 16.541;  //x in field drawings (from 2024 game - update for 2025 if necessary)
-    public static final double FIELD_WIDTH_METERS = 8.211;  //y in field drawings (from 2024 game - update for 2025 if necessary)
     //These are buffers to accomodate for margin of error
     public static final double FIELD_POSE_XY_ERROR_MARGIN_METERS = Units.inchesToMeters(1.0);
     public static final double FIELD_POSE_THETA_ERROR_MARGIN_RADIANS = Units.degreesToRadians(2.0);
