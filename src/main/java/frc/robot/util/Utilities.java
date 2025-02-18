@@ -44,9 +44,14 @@ public class Utilities {
     }
 
     public static void verifySparkMaxStatus(REVLibError revResult, int canID, String deviceName, String operation) {
+        String alertKey = "SparkMax-" + canID;
+
         if (revResult != REVLibError.kOk) {
-            new Alert(deviceName + " SparkMax with CAN ID: " + canID + " failed " + operation + "! Result = " + revResult.toString(), AlertType.kError).set(true);
+            String text = deviceName + " SparkMax with CAN ID: " + canID + " failed " + operation + "! Result = " + revResult.toString();
+            AlertManager.addAlert(alertKey, text, AlertType.kError);
             System.out.println("Error configuring drive motor: " + revResult);
+        } else {
+            AlertManager.removeAlert(alertKey);
         }
     }
 }

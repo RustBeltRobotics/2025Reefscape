@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.apriltag.AprilTagFields;
 import frc.robot.Constants;
+import frc.robot.util.AlertManager;
 import frc.robot.vision.CameraPosition;
 import frc.robot.vision.VisionCamera;
 import frc.robot.vision.VisionPoseEstimationResult;
@@ -95,8 +96,9 @@ public class VisionSystem {
         visionCameras.removeIf(c -> {
             boolean isDisconnected = !c.isCameraConnected();
             if (isDisconnected) {
-                new Alert("Camera (" + c.getCameraName() + ") disconnected!", AlertType.kWarning).set(true);
+                AlertManager.addAlert(c.getCameraName(), "Camera (" + c.getCameraName() + ") disconnected!", AlertType.kWarning);
             } else {
+                AlertManager.removeAlert(c.getCameraName());
                 c.getCameraInstance().setPipelineIndex(Constants.Vision.APRIL_TAG_PIPELINE_INDEX);
             }
 
