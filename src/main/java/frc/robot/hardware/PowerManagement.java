@@ -22,7 +22,23 @@ public class PowerManagement {
     public PowerManagement() {
         powerDistributionHub = new PowerDistribution(Constants.CanID.POWER_DISTRIBUTION, ModuleType.kRev);
         channelsInUse = new HashSet<>();
-        //TODO: Define which channels are in use
+        channelsInUse.add(0);
+        channelsInUse.add(1);
+        channelsInUse.add(2);
+        channelsInUse.add(3);
+        channelsInUse.add(4);
+        channelsInUse.add(6);
+        channelsInUse.add(8);
+        channelsInUse.add(9);
+        channelsInUse.add(10);
+        channelsInUse.add(13);
+        channelsInUse.add(15);
+        channelsInUse.add(16);
+        channelsInUse.add(17);
+        channelsInUse.add(18);
+        channelsInUse.add(19);
+        channelsInUse.add(20);
+        channelsInUse.add(22);
     }
 
     public void updateTelemetry() {

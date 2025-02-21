@@ -3,7 +3,6 @@ package frc.robot.util;
 import com.revrobotics.REVLibError;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 
 public class Utilities {

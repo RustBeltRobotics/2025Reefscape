@@ -6,6 +6,7 @@ import org.photonvision.EstimatedRobotPose;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 
@@ -17,6 +18,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -107,15 +109,7 @@ public class Drivetrain extends SubsystemBase {
     private DoublePublisher linearAccelerationYPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/Y").publish();
 
     public Drivetrain() {
-        RobotConfig ppRobotConfig = null;
-
-        try{
-            //TODO: Move this to Constants.PathPlanner once values are solidified
-            ppRobotConfig = RobotConfig.fromGUISettings();
-        } catch (Exception e) {
-            // Handle exception as needed
-            e.printStackTrace();
-        }
+        RobotConfig ppRobotConfig = Constants.PathPlanner.ROBOT_CONFIG;
 
         // Configure AutoBuilder last
         AutoBuilder.configure(

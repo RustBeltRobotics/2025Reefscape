@@ -6,6 +6,9 @@ package frc.robot;
 
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.RobotConfig;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -14,6 +17,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 
@@ -85,7 +89,11 @@ public final class Constants {
   public static final class Kinematics {
 
     /* Robot mass in Kg. */
-    public static final double MASS = Units.lbsToKilograms(106.0); //Note: this weight includes the battery (but no bumpers yet)
+    public static final double MASS = Units.lbsToKilograms(106.0); //Note: this weight includes the battery (but no bumpers)
+
+    public static final double LOADED_MASS = Units.lbsToKilograms(135.0); //Note: this weight includes the battery and bumpers
+
+    public static final double MOMENT_OF_INTERIA = 6.883; //TODO: get this value from CAD from Dillan
 
     /* Robot frame width in meters */
     public static final double WIDTH = Units.inchesToMeters(28.125);
@@ -107,6 +115,9 @@ public final class Constants {
 
     /* Robot wheel radius in meters */
     public static final double WHEEL_RADIUS = WHEEL_DIAMETER / 2.0;
+
+    /* COF of wheels */
+    public static final double WHEEL_COEFFECIENT_OF_FRICTION = 1.200;
     
     /**
      * The left-to-right distance between the drivetrain wheels
@@ -221,6 +232,11 @@ public final class Constants {
   }
 
   public static final class PathPlanner {
+    public static final ModuleConfig MODULE_CONFIG = new ModuleConfig(Kinematics.WHEEL_RADIUS, Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND,
+      Kinematics.WHEEL_COEFFECIENT_OF_FRICTION, DCMotor.getKrakenX60(1), 6.12, 60.0, 4);
+    public static final RobotConfig ROBOT_CONFIG = new RobotConfig(Constants.Kinematics.LOADED_MASS, Constants.Kinematics.MOMENT_OF_INTERIA,
+      MODULE_CONFIG, Constants.Kinematics.DRIVETRAIN_TRACKWIDTH_METERS);
+      
     public static final double rotation_P = 1.5;
     public static final double rotation_I = 0.0;
     public static final double rotation_D = 0.0;
