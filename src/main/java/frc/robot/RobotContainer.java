@@ -7,6 +7,7 @@ package frc.robot;
 import frc.robot.Constants.DriverStation;
 import frc.robot.commands.DefaultClimbCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
+import frc.robot.model.ElevatorVerticalPosition;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
@@ -36,22 +37,29 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
 
   // For limiting maximum speed (1.0 = 100% - full speed)
-  private static final double MAX_SPEED_FACTOR = 1.0;
+  private static double MAX_SPEED_FACTOR = 1.0;
 
   private final CommandXboxController driverController = new CommandXboxController(DriverStation.CONTROLLER_PORT_DRIVER);
   private final CommandXboxController operatorController = new CommandXboxController(DriverStation.CONTROLLER_PORT_OPERATOR);
   private final Drivetrain drivetrain = new Drivetrain();
   private final Elevator elevator = new Elevator();
-  // private final Rejector rejector = new Rejector();
+  private final Rejector rejector = new Rejector();
   private final Climber climber = new Climber();
   private final VisionSystem visionSystem;
 
   private final SendableChooser<Command> autoChooser;
-  private final SendableChooser<Integer> startingPosisitonChooser = new SendableChooser<>();
+  private final SendableChooser<Double> driveTrainSpeedChooser = new SendableChooser<>();
 
   /** The container for the robot. Contains subsystems, IO devices, and commands. */
   public RobotContainer() {
     autoChooser = AutoBuilder.buildAutoChooser();
+
+    driveTrainSpeedChooser.setDefaultOption("100%", 1.0);
+    driveTrainSpeedChooser.addOption("75%", 0.75);
+    driveTrainSpeedChooser.addOption("50%", 0.5);
+    driveTrainSpeedChooser.addOption("25%", 0.25);
+    driveTrainSpeedChooser.onChange((newValue) -> RobotContainer.MAX_SPEED_FACTOR = newValue);
+    Constants.Shuffleboard.COMPETITION_TAB.add("Drive Speed Selector", driveTrainSpeedChooser).withPosition(0, 2).withSize(2, 1);
 
     if (Constants.Vision.VISION_ENABLED) {
       visionSystem = new VisionSystem();
@@ -77,19 +85,30 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    // TODO: MJR
-    
     // Pressing A button sets forward direction to current robot heading
     driverController.a().onTrue(drivetrain.zeroPoseEstimatorAngleCommand());
-    //Pressing B button applies kS voltage to the elevator vertical motors (this is for testing / determining proper kS value)
-    driverController.b().onTrue(elevator.getTestInitialKsCommand());
-    //Pressing X button moves elevator to 6" setpoint (just for testing / PID tuning)
+    //Pressing X button moves elevator to L2 setpoint (just for testing / PID tuning)
     driverController.x().onTrue(elevator.elevatorTestVerticalSetpointCommand());
     //Pressing Y button stops elevator / moves it to bottom position
     driverController.y().onTrue(elevator.elevatorVerticalStopCommand());
 
-    operatorController.a().onTrue(elevator.tiltOutCommand());
-    operatorController.b().onTrue(elevator.tiltInCommand());
+    //Pressing A button moves elevator to L2 setpoint to score coral
+    operatorController.a().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L2));
+    //Pressing B button moves elevator to L3 setpoint to score coral
+    operatorController.b().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3));
+    //Pressing X button moves elevator to L1 (bottom) setpoint to score coral
+    operatorController.x().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1));
+    //Pressing Y button moves elevator to L4 setpoint to score coral
+    operatorController.y().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4));
+    //Pressing Down on the D-pad starts the avoid tipping command sequence (moves elevator to bottom position and tilts it in)
+    operatorController.povDown().onTrue(elevator.avoidTippingCommand());
+    //Pressing Left or Right on the D-pad toggles between tilting the elevator out and in
+    Command toggleElevatorTiltCommand = elevator.toggleElevatorTiltCommand();
+    operatorController.povLeft().onTrue(toggleElevatorTiltCommand);
+    operatorController.povRight().onTrue(toggleElevatorTiltCommand);
+
+    // Automatically eject the coral when the elevator reaches its target height
+    elevator.readyToEjectCoral().onTrue(rejector.scoreCoralCommand());
   }
 
   private void setDefaultCommands() {
@@ -100,8 +119,8 @@ public class RobotContainer {
 
     DoubleSupplier elevatorTiltSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
     elevator.setDefaultCommand(elevator.elevatorTiltXBoxControllerCommand(elevatorTiltSpeedSupplier));
-    // DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
-    // rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
+    DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
+    rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
 
     BooleanSupplier climbActiveSupplier = () -> operatorController.povUp().getAsBoolean();
     climber.setDefaultCommand(new DefaultClimbCommand(climber, climbActiveSupplier));
@@ -117,12 +136,7 @@ public class RobotContainer {
   }
 
   public void configureAutos() {
-    Constants.Shuffleboard.COMPETITION_TAB.add("auto machine", autoChooser).withPosition(0, 0).withSize(2, 1);
-
-    startingPosisitonChooser.addOption("1", 1);
-    startingPosisitonChooser.addOption("2", 2);
-    startingPosisitonChooser.addOption("3", 3);
-    Constants.Shuffleboard.COMPETITION_TAB.add("where am I?", startingPosisitonChooser).withPosition(2, 0);
+    Constants.Shuffleboard.COMPETITION_TAB.add("Auto Selector", autoChooser).withPosition(0, 0).withSize(2, 1);
   }
 
   //MJR: TODO: If we end up needing this, call it like something like this:

@@ -1,8 +1,5 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Seconds;
-
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;

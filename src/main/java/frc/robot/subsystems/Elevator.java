@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -9,11 +7,11 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import frc.robot.Constants;
 import frc.robot.Robot;
-import frc.robot.model.ElevatorPosition;
+import frc.robot.model.ElevatorTiltPosition;
+import frc.robot.model.ElevatorVerticalPosition;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import com.revrobotics.RelativeEncoder;
@@ -27,7 +25,6 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Alert;
@@ -42,7 +39,10 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class Elevator extends SubsystemBase implements AutoCloseable {
 
@@ -50,8 +50,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     //         .getLayout("Elevator vertical PID", BuiltInLayouts.kList)
     //         .withSize(2, 2);
             
-    private static final Map<ElevatorPosition, Double> elevatorPositionToSetpointMeters;
-    private static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(1.0); //tolerable error distance in meters (i.e. is the current height close enough to the goal?)
+    private static final Map<ElevatorVerticalPosition, Double> elevatorPositionToSetpointMeters;
 
     private final Alert debugMsgAlert = new Alert("Elevator debug: ", AlertType.kInfo);
 
@@ -78,9 +77,11 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     private double currentHeight; //current height as read from encoder (in meters)
     private double goalHeight; //height of the current goal
     private boolean atGoal;  //whether we have reached the desired height yet or not
-    private double goalHeightUpperBound = goalHeight + GOAL_DISTANCE_TOLERANCE;
-    private double goalHeightLowerBound = goalHeight - GOAL_DISTANCE_TOLERANCE;
-    private ElevatorPosition goalPosition; //the desired position to reach
+    private double goalHeightUpperBound = goalHeight + Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
+    private double goalHeightLowerBound = goalHeight - Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
+    private ElevatorVerticalPosition goalPosition; //the desired position to reach
+    private ElevatorTiltPosition desiredTiltPosition = ElevatorTiltPosition.IN;  //robot always should start with elevator tilted inwards
+    private final Trigger readyToEjectCoral = new Trigger(() -> atGoal);
 
     private DoublePublisher currentHeightPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/Height/Current").publish();
     private DoublePublisher goalHeightPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/Height/Goal").publish();
@@ -109,13 +110,12 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     private MechanismLigament2d m_elevatorMech2d;
 
     static {
-        elevatorPositionToSetpointMeters = new EnumMap<>(ElevatorPosition.class);
+        elevatorPositionToSetpointMeters = new EnumMap<>(ElevatorVerticalPosition.class);
        
-        elevatorPositionToSetpointMeters.put(ElevatorPosition.BOTTOM, Constants.Elevator.POSITION_BOTTOM);
-        elevatorPositionToSetpointMeters.put(ElevatorPosition.L1, Constants.Elevator.POSITION_L1);
-        elevatorPositionToSetpointMeters.put(ElevatorPosition.L2, Constants.Elevator.POSITION_L2);
-        elevatorPositionToSetpointMeters.put(ElevatorPosition.L3, Constants.Elevator.POSITION_L3);
-        elevatorPositionToSetpointMeters.put(ElevatorPosition.L4, Constants.Elevator.POSITION_L4);
+        elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L1, Constants.Elevator.POSITION_L1);
+        elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L2, Constants.Elevator.POSITION_L2);
+        elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L3, Constants.Elevator.POSITION_L3);
+        elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L4, Constants.Elevator.POSITION_L4);
 
         SmartDashboard.putNumber("elevatorKp", Constants.Elevator.kElevatorKp);
         SmartDashboard.putNumber("elevatorKi", Constants.Elevator.kElevatorKi);
@@ -185,21 +185,30 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         m_elevatorMech2d.setLength(verticalEncoderSim.getPosition());
     }
 
-    public void avoidTipping() {
-        //TODO: if elevator is vertical, snap it back in angled position
-        //TODO: if elevator is raised high, lower it quickly to bring momentum/CG down
+    public Command avoidTippingCommand() {
+        Command doNothing = this.runOnce(() -> {});
+        //if elevator is vertical, snap it back in angled position
+        Command tiltCorrectionCommand = desiredTiltPosition == ElevatorTiltPosition.OUT ? tiltInCommand() : doNothing;
+        //if elevator is raised high, lower it quickly to bring momentum/CG down
+        Command verticalCorrectionCommand = goalPosition != ElevatorVerticalPosition.L1 ? elevatorVerticalStopCommand() : doNothing;
+        
+        return Commands.parallel(verticalCorrectionCommand, tiltCorrectionCommand);
     }
 
     public Command elevatorTestVerticalSetpointCommand() {
-        return getSetVerticalGoalCommand(ElevatorPosition.L1);
+        return getSetVerticalGoalCommand(ElevatorVerticalPosition.L2);
     }
 
     public Command elevatorVerticalStopCommand() {
-        return getSetVerticalGoalCommand(ElevatorPosition.BOTTOM);
+        return getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).until(() -> atGoal);
     }
 
     public Command elevatorTiltXBoxControllerCommand(DoubleSupplier speedSupplier) {
         return this.run(() -> tiltMotor.set(speedSupplier.getAsDouble()));
+    }
+
+    public Command toggleElevatorTiltCommand() {
+        return new ConditionalCommand(tiltInCommand(), tiltOutCommand(), () -> desiredTiltPosition == ElevatorTiltPosition.OUT);
     }
 /*
     public Command elevatorVerticalXBoxControllerCommand(DoubleSupplier speedSupplier) {
@@ -298,19 +307,19 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         // }
     }
 
-    private Command getSetVerticalGoalCommand(ElevatorPosition goalPosition) {
+    public Command getSetVerticalGoalCommand(ElevatorVerticalPosition goalPosition) {
         double goalInMeters = elevatorPositionToSetpointMeters.get(goalPosition);
         this.goalHeight = goalInMeters;
         this.goalPosition = goalPosition;
         this.atGoal = false;
-        goalHeightUpperBound = goalHeight + GOAL_DISTANCE_TOLERANCE;
-        goalHeightLowerBound = goalHeight - GOAL_DISTANCE_TOLERANCE;
+        goalHeightUpperBound = goalHeight + Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
+        goalHeightLowerBound = goalHeight - Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
 
         return run(() -> reachVerticalGoal(goalInMeters));
     }
 
-    public BooleanSupplier atGoal() {
-        return () -> atGoal;
+    public Trigger readyToEjectCoral() {
+        return readyToEjectCoral;
     }
 
     private SparkMaxConfig getVerticalMotorLeaderConfig(boolean invert, double kP, double kI, double kD) {
@@ -351,14 +360,24 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
     public Command tiltOutCommand() {
         //extend the mechanism forwards out beyond the frame perimeter to put elevator in vertical position
-        return this.run(() -> tiltMotor.set(-0.4))
-            .until(() -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && Math.abs(tiltMotorEncoderVelocity) < 0.05);
+        return this.run(() -> {
+            desiredTiltPosition = ElevatorTiltPosition.OUT;
+            tiltMotor.set(-Constants.Elevator.TILT_MOTOR_SPEED);
+        }).until(
+            () -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR
+                && Math.abs(tiltMotorEncoderVelocity) < Constants.Elevator.TILT_MOTOR_MINIMUM_VELOCITY_THRESHOLD
+        );
     }
 
     public Command tiltInCommand() {
         //retract the mechanism back into the frame perimeter 
-        return this.run(() -> tiltMotor.set(0.4))
-            .until(() -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && tiltMotorEncoderVelocity < 0.05);
+        return this.run(() -> {
+            desiredTiltPosition = ElevatorTiltPosition.IN;
+            tiltMotor.set(Constants.Elevator.TILT_MOTOR_SPEED);
+        }).until(
+            () -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR
+                && tiltMotorEncoderVelocity < Constants.Elevator.TILT_MOTOR_MINIMUM_VELOCITY_THRESHOLD
+        );
     }
 
     /**
@@ -387,7 +406,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         leftEncoder.setPosition(0.0);
         rightEncoder.setPosition(0.0);
     }
-    
+
     @Override
     public void close() throws Exception {
         m_mech2d.close();

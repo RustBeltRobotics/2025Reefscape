@@ -1,4 +1,13 @@
 2025 TODO:
+    - Test operator commands:
+        - operator.a = score coral L2
+        - operator.b = score coral L3
+        - operator.x = score coral L1
+        - operator.y = score coral L4
+        - operator.d-left = toggle tilt
+        - operator.d-right = toggle tilt
+        - operator.d-up = climb
+        - operator.d-down = stop tipping over
     - Tune the CollisionDetector / Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G value
         - Graph /RBR/Gyro/Acceleration/X and /RBR/Gyro/Acceleration/Y values while driving
     - Verify that running elevatorVerticalStopCommand (Y button on driver controller) does not forcefully drive the elevator into the bottom stop
@@ -22,10 +31,6 @@ Done:
     - Feed logs into SysId tool \FRC\2024\2024 WPILib Tools\SysId 2024
     - https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/loading-data.html
     - https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/analyzing-gains.html
-
-TODO:
-- For whatever reason camera 3 and 4 duplicate on reboot of photon2 pi
-- Can temporarily workaround by deleting extras from sqlite file on filesystem, then restart the photonvision app via the GUI
 
 Input:
     - Exposure and Gain:
@@ -64,6 +69,3 @@ Output:
     - Example codebases:
         - https://github.com/StuyPulse/Izzi/blob/main/src/main/java/com/stuypulse/robot/subsystems/swerve/modules/KrakenSwerveModule.java
         - https://github.com/StuyPulse/Izzi/blob/main/src/main/java/com/stuypulse/robot/constants/Motors.java
-
-- We also now have a CTRE Pigeon Gyro
-    - Compare and contrast to Navx

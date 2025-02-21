@@ -93,7 +93,7 @@ public final class Constants {
 
     public static final double LOADED_MASS = Units.lbsToKilograms(135.0); //Note: this weight includes the battery and bumpers
 
-    public static final double MOMENT_OF_INTERIA = 6.883; //TODO: get this value from CAD from Dillan
+    public static final double MOMENT_OF_INTERIA = 6.883; //TODO: get this value from CAD from Dillan - 6.883 is the default UI value
 
     /* Robot frame width in meters */
     public static final double WIDTH = Units.inchesToMeters(28.125);
@@ -216,12 +216,19 @@ public final class Constants {
 
     public static final double kTiltGearing = 75.0;  //reduction
 
-    public static final double POSITION_BOTTOM = 0.0;
-     //TODO: test and confirm these values - these are just dummy values
-    public static final double POSITION_L1 = Units.inchesToMeters(6.0);
-    public static final double POSITION_L2 = Units.inchesToMeters(12.0);
-    public static final double POSITION_L3 = Units.inchesToMeters(18.0);
-    public static final double POSITION_L4 = Units.inchesToMeters(24.0);
+    public static final double POSITION_L1 = Units.inchesToMeters(0.0);
+    //TODO: test and confirm these values - these are just guesstimates
+    public static final double POSITION_L2 = Units.inchesToMeters(3.0);
+    public static final double POSITION_L3 = Units.inchesToMeters(19.0);
+    public static final double POSITION_L4 = Units.inchesToMeters(43.0);
+
+    //tolerable error distance in meters (i.e. is the current height close enough to the goal?)
+    public static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(1.0);
+
+    //percentage at which to run the tilt motor
+    public static final double TILT_MOTOR_SPEED = 0.4;
+    //anything below this velocity we will consider the tilt motor to be not moving (for stall condition detection)
+    public static final double TILT_MOTOR_MINIMUM_VELOCITY_THRESHOLD = 0.05;
 
     /** Conversion between motor rotations and elevator belt distance in meters */
     //Note: multiply by 2.0 to account for cascade design, which doubles the distance traveled
