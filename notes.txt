@@ -1,8 +1,7 @@
 2025 TODO:
-    - Update SysId to use FalconFX code for CTRE (doc link in class)
-    - Update code to use Pigeon instead of Navx
-    - Mount pigeon - center of robot with X+ facing front of robot
-    - Define CAN IDs for devices using software
+    - Tune the CollisionDetector / Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G value
+        - Graph /RBR/Gyro/Acceleration/X and /RBR/Gyro/Acceleration/Y values while driving
+    - Verify that running elevatorVerticalStopCommand (Y button on driver controller) does not forcefully drive the elevator into the bottom stop
     - Perform test driving runs to calculate std deviations for wheel odometry and vision for pose estimator (ensure finish pose has a AprilTag visible by vision)
         1. Drive straight a set distance, measure starting robot pose vs. finish robot pose
         2. Drive sideways (stafe straight) a set distance, measure starting robot pose vs. finish robot pose

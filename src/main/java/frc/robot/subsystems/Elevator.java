@@ -11,22 +11,15 @@ import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.model.ElevatorPosition;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Minute;
-import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.Second;
-
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.sim.SparkRelativeEncoderSim;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -34,10 +27,9 @@ import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -58,7 +50,8 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     //         .getLayout("Elevator vertical PID", BuiltInLayouts.kList)
     //         .withSize(2, 2);
             
-    private static Map<ElevatorPosition, Double> elevatorPositionToSetpointMeters;
+    private static final Map<ElevatorPosition, Double> elevatorPositionToSetpointMeters;
+    private static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(1.0); //tolerable error distance in meters (i.e. is the current height close enough to the goal?)
 
     private final Alert debugMsgAlert = new Alert("Elevator debug: ", AlertType.kInfo);
 
@@ -82,8 +75,15 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     private double kpVerticalElevator = Constants.Elevator.kElevatorKp;
     private double kiVerticalElevator = Constants.Elevator.kElevatorKi;
     private double kdVerticalElevator = Constants.Elevator.kElevatorKd;
+    private double currentHeight; //current height as read from encoder (in meters)
+    private double goalHeight; //height of the current goal
+    private boolean atGoal;  //whether we have reached the desired height yet or not
+    private double goalHeightUpperBound = goalHeight + GOAL_DISTANCE_TOLERANCE;
+    private double goalHeightLowerBound = goalHeight - GOAL_DISTANCE_TOLERANCE;
+    private ElevatorPosition goalPosition; //the desired position to reach
 
-    private DoublePublisher heightPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/Height").publish();
+    private DoublePublisher currentHeightPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/Height/Current").publish();
+    private DoublePublisher goalHeightPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/Height/Goal").publish();
     
     private DoublePublisher leftMotorEncoderPositionPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/LeftMotor/Position").publish();
     private DoublePublisher leftMotorOutputCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/LeftMotor/Current").publish();
@@ -162,6 +162,8 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
             Constants.Elevator.kElevatorKa);
     
         ksVerticalElevator = Constants.Elevator.kElevatorKs;
+
+        debugMsgAlert.set(true);
     }
 
     /** Advance the simulation. */
@@ -189,12 +191,10 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     }
 
     public Command elevatorTestVerticalSetpointCommand() {
-        // return this.run(() -> leftMotor.stopMotor());
         return getSetVerticalGoalCommand(ElevatorPosition.L1);
     }
 
     public Command elevatorVerticalStopCommand() {
-        // return this.run(() -> leftMotor.stopMotor());
         return getSetVerticalGoalCommand(ElevatorPosition.BOTTOM);
     }
 
@@ -236,7 +236,24 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         tiltMotorEncoderPositionPublisher.set(tiltMotorEncoderPosition);
         tiltMotorVelocityPublisher.set(tiltMotorEncoderVelocity);
 
-        heightPublisher.set(getHeight());
+        currentHeight = getHeight();
+
+        currentHeightPublisher.set(currentHeight);
+        goalHeightPublisher.set(goalHeight);
+
+        if (goalHeight >= goalHeightLowerBound || goalHeight <= goalHeightUpperBound) {
+            if (!atGoal) {
+                debugMsgAlert.setText("At goal = true");
+            }
+            atGoal = true;
+        } else {
+            if (atGoal) {
+                if (!atGoal) {
+                    debugMsgAlert.setText("At goal = false");
+                }
+            }
+            atGoal = false;
+        }
 
         //this is for initial calculation of kS for ElevatorFeedForward
         double smartDashboardKs = SmartDashboard.getNumber("elevatorKs", Constants.Elevator.kElevatorKs);
@@ -283,21 +300,23 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
     private Command getSetVerticalGoalCommand(ElevatorPosition goalPosition) {
         double goalInMeters = elevatorPositionToSetpointMeters.get(goalPosition);
+        this.goalHeight = goalInMeters;
+        this.goalPosition = goalPosition;
+        this.atGoal = false;
+        goalHeightUpperBound = goalHeight + GOAL_DISTANCE_TOLERANCE;
+        goalHeightLowerBound = goalHeight - GOAL_DISTANCE_TOLERANCE;
 
         return run(() -> reachVerticalGoal(goalInMeters));
+    }
+
+    public BooleanSupplier atGoal() {
+        return () -> atGoal;
     }
 
     private SparkMaxConfig getVerticalMotorLeaderConfig(boolean invert, double kP, double kI, double kD) {
         SparkMaxConfig sparkMaxConfig = new SparkMaxConfig();
         sparkMaxConfig.inverted(invert).idleMode(IdleMode.kBrake);
         sparkMaxConfig.encoder.positionConversionFactor(Constants.Elevator.POSITION_CONVERSION).velocityConversionFactor(Constants.Elevator.VELOCITY_CONVERSION);
-        // sparkMaxConfig.closedLoopRampRate(0.25);
-        // sparkMaxConfig.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        //     .pid(kP, kI, kD)
-        //     .outputRange(-1, 1)
-        //     .maxMotion
-        //     .maxVelocity(convertDistanceToEncoderRotations(Meters.of(1)).per(Second).in(RPM))
-        //     .maxAcceleration(convertDistanceToEncoderRotations(Meters.of(2)).per(Second).per(Second).in(RPM.per(Second)));
         sparkMaxConfig.smartCurrentLimit(Constants.CurrentLimit.SparkMax.SMART_ELEVATOR).secondaryCurrentLimit(Constants.CurrentLimit.SparkMax.SECONDARY_ELEVATOR);
 
         return sparkMaxConfig;
@@ -333,13 +352,13 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     public Command tiltOutCommand() {
         //extend the mechanism forwards out beyond the frame perimeter to put elevator in vertical position
         return this.run(() -> tiltMotor.set(-0.4))
-        .until(() -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && Math.abs(tiltMotorEncoderVelocity) < 0.05);
+            .until(() -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && Math.abs(tiltMotorEncoderVelocity) < 0.05);
     }
 
     public Command tiltInCommand() {
         //retract the mechanism back into the frame perimeter 
         return this.run(() -> tiltMotor.set(0.4))
-        .until(() -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && tiltMotorEncoderVelocity < 0.05);
+            .until(() -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && tiltMotorEncoderVelocity < 0.05);
     }
 
     /**
@@ -352,12 +371,6 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         double pidOutput = verticalProfiledPidController.calculate(leftEncoder.getPosition());
         double feedforwardOutput = verticalFeedForward.calculate(verticalProfiledPidController.getSetpoint().velocity);
         leftMotor.setVoltage(pidOutput + feedforwardOutput);
-
-        // leftPidController.setReference(convertDistanceToEncoderRotations(Meters.of(goalInMeters)).in(Rotations),
-        //     ControlType.kMAXMotionPositionControl,
-        //     ClosedLoopSlot.kSlot0,
-        //     verticalFeedForward.calculate(convertEncoderRotationsToDistance(Rotations.of(leftEncoder.getVelocity())).per(Minute).in(MetersPerSecond))
-        // );
     }
 
     private void resetAllEncoders() {
@@ -374,24 +387,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         leftEncoder.setPosition(0.0);
         rightEncoder.setPosition(0.0);
     }
-/* 
-    public static double getDistanceInMetersForEncoderRotations(double rotations) {
-        return rotations * Constants.Elevator.POSITION_CONVERSION * 2;
-    }
-
-    public static double getEncoderRotationsForDistanceInMeters(double distance) {
-        return distance / Constants.Elevator.POSITION_CONVERSION / 2;
-    }
-
-    public static Distance convertEncoderRotationsToDistance(Angle rotations) {
-        //Note: the times(2) is because the elevator has a cascade design - it will move twice as far as the motor encoder output
-        return Meters.of((rotations.in(Rotations) / Constants.Elevator.kElevatorGearing) * (Constants.Elevator.kElevatorDrumRadius * 2 * Math.PI)).times(2.0);
-    }
-
-    public static Angle convertDistanceToEncoderRotations(Distance distance) {
-      return Rotations.of(distance.in(Meters) / (Constants.Elevator.kElevatorDrumRadius * 2 * Math.PI) * Constants.Elevator.kElevatorGearing).div(2.0);
-    }
-*/
+    
     @Override
     public void close() throws Exception {
         m_mech2d.close();
