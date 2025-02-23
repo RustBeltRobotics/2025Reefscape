@@ -11,6 +11,7 @@ import frc.robot.model.ElevatorVerticalPosition;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.ElevatorTiltMechanism;
 import frc.robot.subsystems.Rejector;
 import frc.robot.subsystems.VisionSystem;
 import frc.robot.util.Utilities;
@@ -24,6 +25,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -43,6 +45,7 @@ public class RobotContainer {
   private final CommandXboxController operatorController = new CommandXboxController(DriverStation.CONTROLLER_PORT_OPERATOR);
   private final Drivetrain drivetrain = new Drivetrain();
   private final Elevator elevator = new Elevator();
+  private final ElevatorTiltMechanism elevatorTiltMechanism = new ElevatorTiltMechanism();
   private final Rejector rejector = new Rejector();
   private final Climber climber = new Climber();
   private final VisionSystem visionSystem;
@@ -64,6 +67,8 @@ public class RobotContainer {
     if (Constants.Vision.VISION_ENABLED) {
       visionSystem = new VisionSystem();
       drivetrain.setVisionSystem(visionSystem);
+    } else {
+      visionSystem = null;
     }
 
     setDefaultCommands();
@@ -90,7 +95,7 @@ public class RobotContainer {
     //Pressing X button moves elevator to L2 setpoint (just for testing / PID tuning)
     driverController.x().onTrue(elevator.elevatorTestVerticalSetpointCommand());
     //Pressing Y button stops elevator / moves it to bottom position
-    driverController.y().onTrue(elevator.elevatorVerticalStopCommand());
+    driverController.y().onTrue(elevator.elevatorBottomCommand());
 
     //Pressing A button moves elevator to L2 setpoint to score coral
     operatorController.a().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L2));
@@ -101,14 +106,21 @@ public class RobotContainer {
     //Pressing Y button moves elevator to L4 setpoint to score coral
     operatorController.y().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4));
     //Pressing Down on the D-pad starts the avoid tipping command sequence (moves elevator to bottom position and tilts it in)
-    operatorController.povDown().onTrue(elevator.avoidTippingCommand());
+    Command avoidTippingCommand = Commands.parallel(elevator.elevatorBottomCommand(), elevatorTiltMechanism.tiltInCommand());
+    operatorController.povDown().onTrue(avoidTippingCommand);
+    operatorController.rightBumper().whileTrue(rejector.getOuttakeCommand());
+    operatorController.leftBumper().whileTrue(rejector.getIntakeCommand());
     //Pressing Left or Right on the D-pad toggles between tilting the elevator out and in
-    Command toggleElevatorTiltCommand = elevator.toggleElevatorTiltCommand();
+    Command toggleElevatorTiltCommand = elevatorTiltMechanism.toggleElevatorTiltCommand();
     operatorController.povLeft().onTrue(toggleElevatorTiltCommand);
     operatorController.povRight().onTrue(toggleElevatorTiltCommand);
 
+    // automatically tilt the elevator inwards and bring to bottom position if the robot is tipping
+    drivetrain.robotIsTipping().onTrue(avoidTippingCommand);
+
     // Automatically eject the coral when the elevator reaches its target height
-    elevator.readyToEjectCoral().onTrue(rejector.scoreCoralCommand());
+    //TODO: Re-enable this if we decide we want to auto-eject when elevator is at desired height
+    // elevator.readyToEjectCoral().onTrue(rejector.scoreCoralCommand());
   }
 
   private void setDefaultCommands() {
@@ -118,7 +130,7 @@ public class RobotContainer {
     drivetrain.setDefaultCommand(new FieldOrientedDriveCommand(drivetrain, translationXSupplier, translationYSupplier, rotationSupplier));
 
     DoubleSupplier elevatorTiltSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
-    elevator.setDefaultCommand(elevator.elevatorTiltXBoxControllerCommand(elevatorTiltSpeedSupplier));
+    elevatorTiltMechanism.setDefaultCommand(elevatorTiltMechanism.elevatorTiltXBoxControllerCommand(elevatorTiltSpeedSupplier));
     DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
     rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
 

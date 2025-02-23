@@ -41,6 +41,10 @@ public final class Constants {
     public static final int CONTROLLER_PORT_OPERATOR = 1;
   }
 
+  public static final class DioPort {
+    public static final int LASER_SENSOR = 0;
+  }
+
   /**
    * CAN bus IDs
    */
@@ -183,6 +187,8 @@ public final class Constants {
             new Translation2d(-DRIVETRAIN_TRACKWIDTH_METERS / 2.0, DRIVETRAIN_WHEELBASE_METERS / 2.0),   //Back Left
             new Translation2d(-DRIVETRAIN_TRACKWIDTH_METERS / 2.0, -DRIVETRAIN_WHEELBASE_METERS / 2.0)); //Back Right
 
+    public static final double TIP_THRESHOLD_DEGREES = 15.0;  //TODO: test/tune this value
+
     /* Change in linear acceleration greater than this value will trigger collision detected */
     public static final double COLLISION_THRESHOLD_DELTA_G = 0.5;
     /* Pose estimate should not be reset until after this long after collision */
@@ -194,16 +200,15 @@ public final class Constants {
   public static final class Elevator {
    
     //TODO: Need to test/tune these values
-    public static final double kElevatorKp = 37.162;  //this value is from sysId
+    public static final double kElevatorKp = 32.42;  //this value is from sysId
     public static final double kElevatorKi = 0;
-    public static final double kElevatorKd = 4.6669;
+    public static final double kElevatorKd = 3.2414;
 
     //Feedforward values obtained via sysId:
-    //https://www.reca.lc/linear?angle=%7B%22s%22%3A90%2C%22u%22%3A%22deg%22%7D&currentLimit=%7B%22s%22%3A38%2C%22u%22%3A%22A%22%7D&efficiency=90&limitAcceleration=0&limitDeceleration=0&limitVelocity=0&limitedAcceleration=%7B%22s%22%3A400%2C%22u%22%3A%22in%2Fs2%22%7D&limitedDeceleration=%7B%22s%22%3A50%2C%22u%22%3A%22in%2Fs2%22%7D&limitedVelocity=%7B%22s%22%3A10%2C%22u%22%3A%22in%2Fs%22%7D&load=%7B%22s%22%3A20%2C%22u%22%3A%22lbs%22%7D&motor=%7B%22quantity%22%3A2%2C%22name%22%3A%22NEO%22%7D&ratio=%7B%22magnitude%22%3A16%2C%22ratioType%22%3A%22Reduction%22%7D&spoolDiameter=%7B%22s%22%3A57.3%2C%22u%22%3A%22mm%22%7D&travelDistance=%7B%22s%22%3A27%2C%22u%22%3A%22in%22%7D   
-    public static final double kElevatorKs = 0.23208; // volts (V)
-    public static final double kElevatorKg = 0.25558; // volts (V)
-    public static final double kElevatorKv = 5.4308; // volt per velocity (V/(m/s))
-    public static final double kElevatorKa = 0.4605; // volt per acceleration (V/(m/s²))
+    public static final double kElevatorKs = 0.31684; // volts (V)
+    public static final double kElevatorKg = 0.18991; // volts (V)
+    public static final double kElevatorKv = 5.4431; // volt per velocity (V/(m/s))
+    public static final double kElevatorKa = 0.33421; // volt per acceleration (V/(m/s²))
 
     public static final double kElevatorGearing = 16.0;  //reduction
     public static final double kElevatorDrumRadius = Units.inchesToMeters(1.128);  //57.3 mm diameter
@@ -217,10 +222,9 @@ public final class Constants {
     public static final double kTiltGearing = 75.0;  //reduction
 
     public static final double POSITION_L1 = Units.inchesToMeters(0.0);
-    //TODO: test and confirm these values - these are just guesstimates
     public static final double POSITION_L2 = Units.inchesToMeters(3.0);
     public static final double POSITION_L3 = Units.inchesToMeters(19.0);
-    public static final double POSITION_L4 = Units.inchesToMeters(43.0);
+    public static final double POSITION_L4 = Units.inchesToMeters(47.0);
 
     //tolerable error distance in meters (i.e. is the current height close enough to the goal?)
     public static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(1.0);
@@ -254,7 +258,8 @@ public final class Constants {
   }
 
   public static final class Vision {
-    public static final boolean VISION_ENABLED = true;
+    //TODO: Re-enable this
+    public static final boolean VISION_ENABLED = false;
     public static final int APRIL_TAG_PIPELINE_INDEX = 0;
     public static final String ARDUCAM_MODEL = "OV9281";
     public static final double POSE_AMBIGUITY_CUTOFF = 0.2;  //https://docs.photonvision.org/en/latest/docs/apriltag-pipelines/3D-tracking.html#ambiguity
@@ -283,7 +288,7 @@ public final class Constants {
      */
     public static final class CameraName {
       //Note: these names are set in hardware via https://docs.arducam.com/UVC-Camera/Serial-Number-Tool-Guide/
-      public static final String FRONT_LEFT = "Arducam_OV9281_USB_Camera-2";
+      public static final String FRONT_CENTER = "Arducam_OV9281_USB_Camera-2";
       public static final String FRONT_RIGHT = "Arducam_OV9281_USB_Camera-3";
       public static final String BACK_RIGHT = "Arducam_OV9281_USB_Camera-1";
       public static final String BACK_LEFT = "Arducam_OV9281_USB_Camera-4";
@@ -304,8 +309,10 @@ public final class Constants {
       //Note: these values can be visualized in AdvantageScope if published over NetworkTables - https://github.com/Mechanical-Advantage/AdvantageScope/blob/main/docs/tabs/3D-FIELD.md
       //example - https://github.com/Mechanical-Advantage/RobotCode2024/blob/main/src/main/java/org/littletonrobotics/frc2024/subsystems/apriltagvision/AprilTagVisionConstants.java#L30
       //x+, y+, z+, (0, -degrees, 0).rotateBy(0, 0, 45 degrees)
-      public static final Transform3d FRONT_LEFT = new Transform3d(CAM_XY_FROM_CENTER_OF_ROBOT, CAM_XY_FROM_CENTER_OF_ROBOT, CAM_Z_FROM_FLOOR, 
-        new Rotation3d(0, CAM_PITCH_ANGLE, 0).rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(45))));  //front left - photonvision1
+
+      //TODO: Re-measure this, it's just an approximation
+      public static final Transform3d FRONT_CENTER = new Transform3d(Units.inchesToMeters(10.0), 0.0, Units.inchesToMeters(9.6), 
+        new Rotation3d(0, -Units.degreesToRadians(5.0), 0));  //front center - photonvision1
       //x+, y-, z+, (0, -degrees, 0).rotateBy(0, 0, -45 degrees)
       public static final Transform3d FRONT_RIGHT = new Transform3d(CAM_XY_FROM_CENTER_OF_ROBOT, -CAM_XY_FROM_CENTER_OF_ROBOT, CAM_Z_FROM_FLOOR, 
         new Rotation3d(0, CAM_PITCH_ANGLE, 0).rotateBy(new Rotation3d(0, 0, -Units.degreesToRadians(45))));  //front right - photonvision2

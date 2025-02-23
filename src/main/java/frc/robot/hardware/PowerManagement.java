@@ -27,7 +27,6 @@ public class PowerManagement {
         channelsInUse.add(2);
         channelsInUse.add(3);
         channelsInUse.add(4);
-        channelsInUse.add(6);
         channelsInUse.add(8);
         channelsInUse.add(9);
         channelsInUse.add(10);

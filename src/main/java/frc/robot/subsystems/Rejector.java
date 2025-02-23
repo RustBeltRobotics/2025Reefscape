@@ -18,8 +18,8 @@ import frc.robot.Constants;
 
 public class Rejector extends SubsystemBase {
 
-    private static final double REJECTOR_SPEED = 0.5;
-    private static final double REJECTOR_RUN_TIME_SECONDS = 0.5;
+    private static final double REJECTOR_SPEED = 0.85;
+    private static final double REJECTOR_RUN_TIME_SECONDS = 0.75;
 
     private final SparkMax motor;
     private final RelativeEncoder encoder;
@@ -50,6 +50,14 @@ public class Rejector extends SubsystemBase {
     public void runAtPercentage(double value) {
         desiredSpeed = value;
         motor.set(desiredSpeed);
+    }
+
+    public Command getOuttakeCommand() {
+        return this.run(() -> runAtPercentage(1.0));
+    }
+
+    public Command getIntakeCommand() {
+        return this.run(() -> runAtPercentage(-1.0));
     }
 
     public Command getRejectorOperatorCommand(DoubleSupplier valueSupplier) {
