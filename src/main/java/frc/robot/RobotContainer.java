@@ -91,13 +91,11 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
+    //DRIVER bindings
     // Pressing A button sets forward direction to current robot heading
     driverController.a().onTrue(drivetrain.zeroPoseEstimatorAngleCommand());
-    //Pressing X button moves elevator to L2 setpoint (just for testing / PID tuning)
-    driverController.x().onTrue(elevator.elevatorTestVerticalSetpointCommand());
-    //Pressing Y button stops elevator / moves it to bottom position
-    driverController.y().onTrue(elevator.elevatorBottomCommand());
 
+    //OPERATOR bindings
     //Pressing A button moves elevator to L2 setpoint to score coral
     operatorController.a().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L2));
     //Pressing B button moves elevator to L3 setpoint to score coral
@@ -114,16 +112,16 @@ public class RobotContainer {
     //Pressing Down on the D-pad starts the avoid tipping command sequence (moves elevator to bottom position and tilts it in)
     Command avoidTippingCommand = Commands.parallel(elevator.elevatorBottomCommand(), elevatorTiltMechanism.tiltInCommand());
     operatorController.povDown().onTrue(avoidTippingCommand);
+    //Pressing right trigger performs outtake
     operatorController.rightTrigger().whileTrue(rejector.getOuttakeCommand());
+    //Pressing left trigger performs intake
     operatorController.leftTrigger().whileTrue(rejector.getIntakeCommand());
+    //Pressing Left on the D-pad tilts elevator in to the robot frame
     operatorController.povLeft().onTrue(elevatorTiltMechanism.tiltInCommand());
+    //Pressing Right on the D-pad tilts elevator out to the fully vertical position
     operatorController.povRight().onTrue(elevatorTiltMechanism.tiltOutCommand());
 
     //TODO: Add explicit elevator tiltOut prior to raising elevator / after loweing elevator
-
-    //TODO: Add a button binding to reset elevator encoders to 0
-
-    //TODO: Add rumble left/right when laser sensor is triggering
 
     //Pressing Left or Right on the D-pad toggles between tilting the elevator out and in
     // Command toggleElevatorTiltCommand = elevatorTiltMechanism.toggleElevatorTiltCommand();
@@ -164,13 +162,13 @@ public class RobotContainer {
     drivetrain.setDefaultCommand(new FieldOrientedDriveCommand(drivetrain, translationXSupplier, translationYSupplier, rotationSupplier));
 
     //TODO: This seems to conflict with the pre-defined height bindings
-    DoubleSupplier elevatorVerticalSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
-    elevator.setDefaultCommand(elevator.runVerticalSpeedCommand(elevatorVerticalSpeedSupplier));
+    // DoubleSupplier elevatorVerticalSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
+    // elevator.setDefaultCommand(elevator.runVerticalSpeedCommand(elevatorVerticalSpeedSupplier));
 
     // DoubleSupplier elevatorTiltSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
     // elevatorTiltMechanism.setDefaultCommand(elevatorTiltMechanism.elevatorTiltXBoxControllerCommand(elevatorTiltSpeedSupplier));
-    DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
-    rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
+    // DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
+    // rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
 
     BooleanSupplier climbActiveSupplier = () -> operatorController.povUp().getAsBoolean();
     climber.setDefaultCommand(new DefaultClimbCommand(climber, climbActiveSupplier));
