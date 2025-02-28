@@ -19,6 +19,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathfindingCommand;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -79,6 +80,9 @@ public class RobotContainer {
     //TODO: register NamedCommands for pathplanner
 
     configureAutos();
+
+    // Speed up initial run of Pathplanner commands
+    PathfindingCommand.warmupCommand().schedule();
   }
 
   /**

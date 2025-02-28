@@ -245,7 +245,7 @@ public class Drivetrain extends SubsystemBase {
 
     //will return true if pose was able to be reset using vision system
     public boolean resetPoseEstimateUsingVision() {
-        if (Constants.Vision.VISION_ENABLED && visionSystem != null) {
+        if (Constants.Vision.VISION_ENABLED) {
             //This will force initial robot pose using vision system - overriding the initial pose set by PathPlanner auto
             Optional<VisionPoseEstimationResult> firstVisionPoseEstimationResult = visionSystem.getRobotPoseEstimationResults().stream().findFirst();
             if (firstVisionPoseEstimationResult.isPresent()) {
@@ -293,7 +293,7 @@ public class Drivetrain extends SubsystemBase {
 
         collisionDetector.checkForCollision();
 
-        if (Constants.Vision.VISION_ENABLED && visionSystem != null) {
+        if (Constants.Vision.VISION_ENABLED) {
             List<VisionPoseEstimationResult> visionPoseEstimationResults = visionSystem.getRobotPoseEstimationResults();
             //TODO: review cases where we get multiple valid estimates back to determine if we should apply further filtering here to drop potential bad results
             for (VisionPoseEstimationResult visionPoseEstimationResult : visionPoseEstimationResults) {
