@@ -9,6 +9,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -20,10 +21,21 @@ public class Climber extends SubsystemBase {
 
     public Climber() {
         climberMotor = new SparkMax(Constants.CanID.CLIMBER_MOTOR, MotorType.kBrushed);
-        SparkMaxConfig climbermotorConfig = new SparkMaxConfig();
-        climbermotorConfig.inverted(false).idleMode(IdleMode.kBrake);
-        climbermotorConfig.smartCurrentLimit(65).secondaryCurrentLimit(Constants.CurrentLimit.Neo.SECONDARY); //TODO: confirm these current limits are good, and convert to finals in the Constants Class
+        SparkMaxConfig climbermotorConfig = getMotorConfig(IdleMode.kBrake);
         climberMotor.configure(climbermotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    }
+
+    public Command changeMotorIdleModeCommand(IdleMode idleMode) {
+        return runOnce(() -> climberMotor.configure(getMotorConfig(idleMode), ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters));
+    }
+
+    private SparkMaxConfig getMotorConfig(IdleMode idleMode) {
+        SparkMaxConfig climbermotorConfig = new SparkMaxConfig();
+        climbermotorConfig.inverted(false).idleMode(idleMode);
+        //TODO: confirm these current limits are good, and convert to finals in the Constants Class
+        climbermotorConfig.smartCurrentLimit(65).secondaryCurrentLimit(Constants.CurrentLimit.Neo.SECONDARY); 
+
+        return climbermotorConfig;
     }
 
     @Override

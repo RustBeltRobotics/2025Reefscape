@@ -1,13 +1,14 @@
 2025 TODO:
-    - Test operator commands:
-        - operator.a = score coral L2
-        - operator.b = score coral L3
-        - operator.x = score coral L1
-        - operator.y = score coral L4
-        - operator.d-left = toggle tilt
-        - operator.d-right = toggle tilt
-        - operator.d-up = climb
-        - operator.d-down = stop tipping over
+    - Create dashboard in Elastic with following widgets:
+        - Gyro
+        - Alerts
+        - Field
+        - Swerve 
+        - Auto-chooser
+        - Voltage view
+        - Command Scheduler
+        - Match Time
+        - Total Current draw (text box or radial gauge)
     - Tune the CollisionDetector / Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G value
         - Graph /RBR/Gyro/Acceleration/X and /RBR/Gyro/Acceleration/Y values while driving
     - Verify that running elevatorVerticalStopCommand (Y button on driver controller) does not forcefully drive the elevator into the bottom stop

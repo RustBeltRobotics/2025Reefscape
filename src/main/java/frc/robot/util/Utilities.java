@@ -7,6 +7,9 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 
 public class Utilities {
 
+    private static final double DRIVER_SCALE_A = 3.7;
+    private static final double DRIVER_SCALE_B = 0.43;
+
     /**
      * This method is used to filter driver input.
      * <p>
@@ -27,6 +30,15 @@ public class Utilities {
         value = Math.copySign(Math.pow(Math.abs(value), power), value);
         return value;
     }
+
+    public static double modifyDriverAxis(double value, double deadband) {
+        // Deadband
+        value = MathUtil.applyDeadband(value, deadband);
+        // scale the input - See https://www.desmos.com/calculator/bnqnldev69 for function graph
+        value = (Math.signum(value) * Math.pow(Math.abs(value), 3.7) + (value * 0.43)) / (1 + 0.42);
+        return value;
+    }
+
     /*
      * I didnt write this and i dont remember what it does
      */

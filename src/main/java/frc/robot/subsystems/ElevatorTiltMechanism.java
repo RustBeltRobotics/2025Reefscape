@@ -65,7 +65,7 @@ public class ElevatorTiltMechanism extends SubsystemBase {
         //extend the mechanism forwards out beyond the frame perimeter to put elevator in vertical position
         return this.run(() -> {
             desiredTiltPosition = ElevatorTiltPosition.OUT;
-            tiltMotor.set(-Constants.Elevator.TILT_MOTOR_SPEED);
+            tiltMotor.set(-Constants.Elevator.TILT_MOTOR_OUT_SPEED);
         }).until(
             () -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR
                 && Math.abs(tiltMotorEncoderVelocity) < Constants.Elevator.TILT_MOTOR_MINIMUM_VELOCITY_THRESHOLD
@@ -76,7 +76,7 @@ public class ElevatorTiltMechanism extends SubsystemBase {
         //retract the mechanism back into the frame perimeter 
         return this.run(() -> {
             desiredTiltPosition = ElevatorTiltPosition.IN;
-            tiltMotor.set(Constants.Elevator.TILT_MOTOR_SPEED);
+            tiltMotor.set(Constants.Elevator.TILT_MOTOR_IN_SPEED);
         }).until(
             () -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR
                 && tiltMotorEncoderVelocity < Constants.Elevator.TILT_MOTOR_MINIMUM_VELOCITY_THRESHOLD

@@ -56,7 +56,7 @@ public class VisionSystem {
     private final StructArrayPublisher<Pose3d> acceptedVisionPosePublisher = NetworkTableInstance.getDefault()
         .getStructArrayTopic("/RBR/Vision/PoseEstimates/Accepted", Pose3d.struct).publish();
     private final StructArrayPublisher<Pose3d> rejectedVisionPosePublisher = NetworkTableInstance.getDefault()
-        .getStructArrayTopic("/RBR/Vision/PosfeEstimates/Rejected", Pose3d.struct).publish();
+        .getStructArrayTopic("/RBR/Vision/PoseEstimates/Rejected", Pose3d.struct).publish();
     private final StructPublisher<Pose2d> frontCenterCameraPosePublisher = NetworkTableInstance.getDefault()
         .getStructTopic("/RBR/Vision/PoseEstimates/Camera/FC", Pose2d.struct).publish();
     private final StructPublisher<Pose2d> frontRightCameraPosePublisher = NetworkTableInstance.getDefault()
@@ -81,14 +81,14 @@ public class VisionSystem {
 
         VisionCamera frontCenterCamera = new VisionCamera(Constants.Vision.CameraName.FRONT_CENTER, CameraPosition.FRONT_CENTER,
             Constants.Vision.CameraPose.FRONT_CENTER, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);   
-        VisionCamera frontRightCamera = new VisionCamera(Constants.Vision.CameraName.FRONT_RIGHT, CameraPosition.FRONT_RIGHT,
-            Constants.Vision.CameraPose.FRONT_RIGHT, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);
+        // VisionCamera frontRightCamera = new VisionCamera(Constants.Vision.CameraName.FRONT_RIGHT, CameraPosition.FRONT_RIGHT,
+        //     Constants.Vision.CameraPose.FRONT_RIGHT, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);
         VisionCamera backRightCamera = new VisionCamera(Constants.Vision.CameraName.BACK_RIGHT, CameraPosition.BACK_RIGHT,
             Constants.Vision.CameraPose.BACK_RIGHT, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);
         VisionCamera backLeftCamera = new VisionCamera(Constants.Vision.CameraName.BACK_LEFT, CameraPosition.BACK_LEFT,
             Constants.Vision.CameraPose.BACK_LEFT, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);
         visionCameras.add(frontCenterCamera);           
-        visionCameras.add(frontRightCamera);           
+        // visionCameras.add(frontRightCamera);           
         visionCameras.add(backRightCamera);           
         visionCameras.add(backLeftCamera);
 
@@ -137,10 +137,18 @@ public class VisionSystem {
         }
 
         if (!acceptedPoses.isEmpty()) {
-            acceptedVisionPosePublisher.accept(acceptedPoses.toArray(new Pose3d[0]));
+            List<Pose3d> acceptedPoses3dList = new ArrayList<>();
+            for (EstimatedRobotPose pose : acceptedPoses) {
+                acceptedPoses3dList.add(pose.estimatedPose);
+            }
+            acceptedVisionPosePublisher.accept(acceptedPoses3dList.toArray(new Pose3d[0]));
         }
         if (!rejectedPoses.isEmpty()) {
-            rejectedVisionPosePublisher.accept(rejectedPoses.toArray(new Pose3d[0]));
+            List<Pose3d> rejectedPoses3dList = new ArrayList<>();
+            for (EstimatedRobotPose pose : rejectedPoses) {
+                rejectedPoses3dList.add(pose.estimatedPose);
+            }
+            rejectedVisionPosePublisher.accept(rejectedPoses3dList.toArray(new Pose3d[0]));
         }
 
         return estimationResults;

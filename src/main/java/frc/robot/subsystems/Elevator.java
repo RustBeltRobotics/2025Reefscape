@@ -11,6 +11,7 @@ import frc.robot.model.ElevatorVerticalPosition;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.sim.SparkMaxSim;
@@ -44,8 +45,6 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
     private static final Map<ElevatorVerticalPosition, Double> elevatorPositionToSetpointMeters;
 
-    // private DigitalInput laserSensor;
-
     // Left/Right are from the perspective of looking forward from the back of the
     // robot towards the front (battery is back side of robot)
     // these are for up/down motion of the elevator
@@ -67,6 +66,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     private double goalHeightUpperBound = goalHeight + Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
     private double goalHeightLowerBound = goalHeight - Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
     private boolean atGoal; // whether we have reached the desired height yet or not
+    private ElevatorVerticalPosition desiredVerticalPosition;
 
     private final BooleanSupplier atGoalSupplier;
     private final Trigger readyToEjectCoral;
@@ -112,6 +112,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L2, Constants.Elevator.POSITION_L2);
         elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L3, Constants.Elevator.POSITION_L3);
         elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L4, Constants.Elevator.POSITION_L4);
+        elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.BARGE, Constants.Elevator.POSITION_BARGE);
 
         SmartDashboard.putNumber("elevatorKp", Constants.Elevator.kElevatorKp);
         SmartDashboard.putNumber("elevatorKi", Constants.Elevator.kElevatorKi);
@@ -121,7 +122,6 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
     public Elevator() {
         // TODO: test once fully wired
-        // laserSensor = new DigitalInput(0);
 
         leftMotor = new SparkMax(Constants.CanID.ELEVATOR_LEFT_MOTOR, MotorType.kBrushless);
         SparkMaxConfig leftMotorConfig = getVerticalMotorLeaderConfig(false, Constants.Elevator.kElevatorKp,
@@ -205,6 +205,9 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
         if (currentHeight >= goalHeightLowerBound && currentHeight <= goalHeightUpperBound) {
             atGoal = true;
+            if (desiredVerticalPosition == ElevatorVerticalPosition.L1) {
+                resetVerticalElevatorEncoders();
+            }
         } else {
             atGoal = false;
         }
@@ -256,6 +259,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     }
 
     private void runToTargetHeight(ElevatorVerticalPosition goalPosition) {
+        this.desiredVerticalPosition = goalPosition;
         double goalInMeters = elevatorPositionToSetpointMeters.get(goalPosition);
         this.goalHeight = goalInMeters;
         this.atGoal = false;
@@ -305,6 +309,14 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         double pidOutput = verticalProfiledPidController.calculate(leftEncoder.getPosition());
         double feedforwardOutput = verticalFeedForward.calculate(verticalProfiledPidController.getSetpoint().velocity);
         leftMotor.setVoltage(pidOutput + feedforwardOutput);
+    }
+
+    public Command runVerticalSpeedCommand(DoubleSupplier speedSupplier) {
+        return this.run(() -> runVerticalSpeed(speedSupplier.getAsDouble()));
+    }
+
+    private void runVerticalSpeed(double speed) {
+        leftMotor.set(speed);
     }
 
     private void resetVerticalElevatorEncoders() {

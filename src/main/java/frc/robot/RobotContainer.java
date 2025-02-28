@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import frc.robot.Constants.DriverStation;
 import frc.robot.commands.DefaultClimbCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
 import frc.robot.model.ElevatorVerticalPosition;
@@ -20,7 +19,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -41,8 +42,8 @@ public class RobotContainer {
   // For limiting maximum speed (1.0 = 100% - full speed)
   private static double MAX_SPEED_FACTOR = 1.0;
 
-  private final CommandXboxController driverController = new CommandXboxController(DriverStation.CONTROLLER_PORT_DRIVER);
-  private final CommandXboxController operatorController = new CommandXboxController(DriverStation.CONTROLLER_PORT_OPERATOR);
+  private final CommandXboxController driverController = new CommandXboxController(Constants.DriverStation.CONTROLLER_PORT_DRIVER);
+  private final CommandXboxController operatorController = new CommandXboxController(Constants.DriverStation.CONTROLLER_PORT_OPERATOR);
   private final Drivetrain drivetrain = new Drivetrain();
   private final Elevator elevator = new Elevator();
   private final ElevatorTiltMechanism elevatorTiltMechanism = new ElevatorTiltMechanism();
@@ -105,32 +106,69 @@ public class RobotContainer {
     operatorController.x().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1));
     //Pressing Y button moves elevator to L4 setpoint to score coral
     operatorController.y().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4));
+    //Pressing L or R trigger moves elevator to barge net score position
+    Command bargeHeightCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.BARGE);
+    operatorController.rightBumper().onTrue(bargeHeightCommand);
+    operatorController.leftBumper().onTrue(bargeHeightCommand);
+
     //Pressing Down on the D-pad starts the avoid tipping command sequence (moves elevator to bottom position and tilts it in)
     Command avoidTippingCommand = Commands.parallel(elevator.elevatorBottomCommand(), elevatorTiltMechanism.tiltInCommand());
     operatorController.povDown().onTrue(avoidTippingCommand);
-    operatorController.rightBumper().whileTrue(rejector.getOuttakeCommand());
-    operatorController.leftBumper().whileTrue(rejector.getIntakeCommand());
+    operatorController.rightTrigger().whileTrue(rejector.getOuttakeCommand());
+    operatorController.leftTrigger().whileTrue(rejector.getIntakeCommand());
+    operatorController.povLeft().onTrue(elevatorTiltMechanism.tiltInCommand());
+    operatorController.povRight().onTrue(elevatorTiltMechanism.tiltOutCommand());
+
+    //TODO: Add explicit elevator tiltOut prior to raising elevator / after loweing elevator
+
+    //TODO: Add a button binding to reset elevator encoders to 0
+
+    //TODO: Add rumble left/right when laser sensor is triggering
+
     //Pressing Left or Right on the D-pad toggles between tilting the elevator out and in
-    Command toggleElevatorTiltCommand = elevatorTiltMechanism.toggleElevatorTiltCommand();
-    operatorController.povLeft().onTrue(toggleElevatorTiltCommand);
-    operatorController.povRight().onTrue(toggleElevatorTiltCommand);
+    // Command toggleElevatorTiltCommand = elevatorTiltMechanism.toggleElevatorTiltCommand();
+    // operatorController.povLeft().onTrue(toggleElevatorTiltCommand);
+    // operatorController.povRight().onTrue(toggleElevatorTiltCommand);
 
     // automatically tilt the elevator inwards and bring to bottom position if the robot is tipping
-    drivetrain.robotIsTipping().onTrue(avoidTippingCommand);
+    // drivetrain.robotIsTipping().onTrue(avoidTippingCommand);
 
     // Automatically eject the coral when the elevator reaches its target height
     //TODO: Re-enable this if we decide we want to auto-eject when elevator is at desired height
     // elevator.readyToEjectCoral().onTrue(rejector.scoreCoralCommand());
+    
+    //change climber motor from brake mode to coast mode 10 seconds after teleop ends
+    //TODO: Test this
+    // Trigger onTeleopInit = new Trigger(DriverStation::isTeleopEnabled);
+    // onTeleopInit.onTrue(climber.changeMotorIdleModeCommand(IdleMode.kBrake)
+    //   .andThen(Commands.waitSeconds(145), climber.changeMotorIdleModeCommand(IdleMode.kCoast))
+    // );
+
+    rejector.leftLaserSensorActive()
+      .onTrue(Commands.runOnce(() -> rumbleControllers(true, true, false)))
+      .onFalse(Commands.runOnce(() -> rumbleControllers(false, true, false)));
+
+    rejector.rightLaserSensorActive()
+      .onTrue(Commands.runOnce(() -> rumbleControllers(true, false, true)))
+      .onFalse(Commands.runOnce(() -> rumbleControllers(false, false, true)));
   }
 
   private void setDefaultCommands() {
-    DoubleSupplier translationXSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getLeftY(), 1.0, 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
-    DoubleSupplier translationYSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getLeftX(), 1.0, 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
-    DoubleSupplier rotationSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getRightX(), 1.0, 0.05) * Constants.Kinematics.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND * MAX_SPEED_FACTOR;
+    // DoubleSupplier translationXSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getLeftY(), 1.0, 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
+    // DoubleSupplier translationYSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getLeftX(), 1.0, 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
+    // DoubleSupplier rotationSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getRightX(), 1.0, 0.05) * Constants.Kinematics.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND * MAX_SPEED_FACTOR;
+    DoubleSupplier translationXSupplier = () -> -Utilities.modifyDriverAxis(driverController.getLeftY(), 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
+    DoubleSupplier translationYSupplier = () -> -Utilities.modifyDriverAxis(driverController.getLeftX(), 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
+    DoubleSupplier rotationSupplier = () -> -Utilities.modifyDriverAxis(driverController.getRightX(), 0.05) * Constants.Kinematics.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND * MAX_SPEED_FACTOR;
+    
     drivetrain.setDefaultCommand(new FieldOrientedDriveCommand(drivetrain, translationXSupplier, translationYSupplier, rotationSupplier));
 
-    DoubleSupplier elevatorTiltSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
-    elevatorTiltMechanism.setDefaultCommand(elevatorTiltMechanism.elevatorTiltXBoxControllerCommand(elevatorTiltSpeedSupplier));
+    //TODO: This seems to conflict with the pre-defined height bindings
+    DoubleSupplier elevatorVerticalSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
+    elevator.setDefaultCommand(elevator.runVerticalSpeedCommand(elevatorVerticalSpeedSupplier));
+
+    // DoubleSupplier elevatorTiltSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
+    // elevatorTiltMechanism.setDefaultCommand(elevatorTiltMechanism.elevatorTiltXBoxControllerCommand(elevatorTiltSpeedSupplier));
     DoubleSupplier rejectorRotationSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftX(), 1.0, 0.05);
     rejector.setDefaultCommand(rejector.getRejectorOperatorCommand(rejectorRotationSupplier));
 
@@ -153,14 +191,18 @@ public class RobotContainer {
 
   //MJR: TODO: If we end up needing this, call it like something like this:
     // new InstantCommand(() -> rumbleControllers(true)).andThen(new WaitCommand(1.0)).finallyDo(() -> rumbleControllers(false));
-  public void rumbleControllers(boolean rumble) {
+  public void rumbleControllers(boolean rumble, boolean rumbleLeft, boolean rumbleRight) {
     double rumbleValue = rumble ? 0.5 : 0.0;
     XboxController driver = driverController.getHID();
     XboxController operator = operatorController.getHID();
     
-    driver.setRumble(RumbleType.kLeftRumble, rumbleValue);
-    driver.setRumble(RumbleType.kRightRumble, rumbleValue);
-    operator.setRumble(RumbleType.kLeftRumble, rumbleValue);
-    operator.setRumble(RumbleType.kRightRumble, rumbleValue);
+    if (rumbleLeft) {
+      driver.setRumble(RumbleType.kLeftRumble, rumbleValue);
+      operator.setRumble(RumbleType.kLeftRumble, rumbleValue);
+    }
+    if (rumbleRight) {
+      driver.setRumble(RumbleType.kRightRumble, rumbleValue);
+      operator.setRumble(RumbleType.kRightRumble, rumbleValue);
+    }
   }
 }

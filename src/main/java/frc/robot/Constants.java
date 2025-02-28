@@ -187,7 +187,7 @@ public final class Constants {
             new Translation2d(-DRIVETRAIN_TRACKWIDTH_METERS / 2.0, DRIVETRAIN_WHEELBASE_METERS / 2.0),   //Back Left
             new Translation2d(-DRIVETRAIN_TRACKWIDTH_METERS / 2.0, -DRIVETRAIN_WHEELBASE_METERS / 2.0)); //Back Right
 
-    public static final double TIP_THRESHOLD_DEGREES = 15.0;  //TODO: test/tune this value
+    public static final double TIP_THRESHOLD_DEGREES = 7.0;
 
     /* Change in linear acceleration greater than this value will trigger collision detected */
     public static final double COLLISION_THRESHOLD_DELTA_G = 0.5;
@@ -222,15 +222,17 @@ public final class Constants {
     public static final double kTiltGearing = 75.0;  //reduction
 
     public static final double POSITION_L1 = Units.inchesToMeters(0.0);
-    public static final double POSITION_L2 = Units.inchesToMeters(3.0);
-    public static final double POSITION_L3 = Units.inchesToMeters(19.0);
-    public static final double POSITION_L4 = Units.inchesToMeters(47.0);
+    public static final double POSITION_L2 = Units.inchesToMeters(4.0);
+    public static final double POSITION_L3 = Units.inchesToMeters(20.0);
+    public static final double POSITION_L4 = Units.inchesToMeters(48.0);
+    public static final double POSITION_BARGE = Units.inchesToMeters(54.0);
 
     //tolerable error distance in meters (i.e. is the current height close enough to the goal?)
     public static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(1.0);
 
     //percentage at which to run the tilt motor
-    public static final double TILT_MOTOR_SPEED = 0.4;
+    public static final double TILT_MOTOR_IN_SPEED = 0.4;
+    public static final double TILT_MOTOR_OUT_SPEED = 0.8;
     //anything below this velocity we will consider the tilt motor to be not moving (for stall condition detection)
     public static final double TILT_MOTOR_MINIMUM_VELOCITY_THRESHOLD = 0.05;
 
@@ -289,9 +291,8 @@ public final class Constants {
     public static final class CameraName {
       //Note: these names are set in hardware via https://docs.arducam.com/UVC-Camera/Serial-Number-Tool-Guide/
       public static final String FRONT_CENTER = "Arducam_OV9281_USB_Camera-2";
-      public static final String FRONT_RIGHT = "Arducam_OV9281_USB_Camera-3";
-      public static final String BACK_RIGHT = "Arducam_OV9281_USB_Camera-1";
-      public static final String BACK_LEFT = "Arducam_OV9281_USB_Camera-4";
+      public static final String BACK_RIGHT = "Arducam_OV9281_USB_Camera-3";
+      public static final String BACK_LEFT = "Arducam_OV9281_USB_Camera-1";
     }
 
     /**
@@ -310,18 +311,20 @@ public final class Constants {
       //example - https://github.com/Mechanical-Advantage/RobotCode2024/blob/main/src/main/java/org/littletonrobotics/frc2024/subsystems/apriltagvision/AprilTagVisionConstants.java#L30
       //x+, y+, z+, (0, -degrees, 0).rotateBy(0, 0, 45 degrees)
 
+      //TODO: Side cameras are 27" up off the floor, approx 9" out from center of robot (side to side, 0.0 back to front)
+
       //TODO: Re-measure this, it's just an approximation
-      public static final Transform3d FRONT_CENTER = new Transform3d(Units.inchesToMeters(10.0), 0.0, Units.inchesToMeters(9.6), 
-        new Rotation3d(0, -Units.degreesToRadians(5.0), 0));  //front center - photonvision1
+      public static final Transform3d FRONT_CENTER = new Transform3d(Units.inchesToMeters(10.0), 0.0, Units.inchesToMeters(16.25), 
+        new Rotation3d(0, 0, 0));  //front center - photonvision1
       //x+, y-, z+, (0, -degrees, 0).rotateBy(0, 0, -45 degrees)
-      public static final Transform3d FRONT_RIGHT = new Transform3d(CAM_XY_FROM_CENTER_OF_ROBOT, -CAM_XY_FROM_CENTER_OF_ROBOT, CAM_Z_FROM_FLOOR, 
-        new Rotation3d(0, CAM_PITCH_ANGLE, 0).rotateBy(new Rotation3d(0, 0, -Units.degreesToRadians(45))));  //front right - photonvision2
+      // public static final Transform3d FRONT_RIGHT = new Transform3d(CAM_XY_FROM_CENTER_OF_ROBOT, -CAM_XY_FROM_CENTER_OF_ROBOT, CAM_Z_FROM_FLOOR, 
+      //   new Rotation3d(0, CAM_PITCH_ANGLE, 0).rotateBy(new Rotation3d(0, 0, -Units.degreesToRadians(45))));  //front right - photonvision2
       //x-, y-, z+, (0, -degrees, 0).rotateBy(0, 0, -135 degrees)
-      public static final Transform3d BACK_RIGHT = new Transform3d(-CAM_XY_FROM_CENTER_OF_ROBOT, -CAM_XY_FROM_CENTER_OF_ROBOT, CAM_Z_FROM_FLOOR, 
-        new Rotation3d(0, CAM_PITCH_ANGLE, 0).rotateBy(new Rotation3d(0, 0, -Units.degreesToRadians(135))));  //back right - photonvision1
+      public static final Transform3d BACK_RIGHT = new Transform3d(0, -Units.inchesToMeters(9.0), Units.inchesToMeters(27.5), 
+        new Rotation3d(0, 0, 0).rotateBy(new Rotation3d(0, 0, -Units.degreesToRadians(90))));  //back right - photonvision1
       //x-, y+, z+, (0, -degrees, 0).rotateBy(0, 0, 135 degrees)
-      public static final Transform3d BACK_LEFT = new Transform3d(-CAM_XY_FROM_CENTER_OF_ROBOT, CAM_XY_FROM_CENTER_OF_ROBOT, CAM_Z_FROM_FLOOR,
-        new Rotation3d(0, CAM_PITCH_ANGLE, 0).rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(135))));  //back left - photonvision2
+      public static final Transform3d BACK_LEFT = new Transform3d(0, Units.inchesToMeters(9.0), Units.inchesToMeters(27.0),
+        new Rotation3d(0, 0, 0).rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(90))));  //back left - photonvision2
     }
   }
 
@@ -333,6 +336,7 @@ public final class Constants {
 
   public static final class Shuffleboard {
     public static final ShuffleboardTab COMPETITION_TAB = edu.wpi.first.wpilibj.shuffleboard.Shuffleboard.getTab("Competition");
+    public static final ShuffleboardTab ELEVATOR_HEIGHT_TAB = edu.wpi.first.wpilibj.shuffleboard.Shuffleboard.getTab("Elevator Height");
     public static final ShuffleboardTab DIAG_TAB = edu.wpi.first.wpilibj.shuffleboard.Shuffleboard.getTab("diag");
   }
 }
