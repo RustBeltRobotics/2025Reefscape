@@ -111,6 +111,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
         elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L1, Constants.Elevator.POSITION_L1);
         elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L2, Constants.Elevator.POSITION_L2);
+        elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.HIGH_ALGAE, Constants.Elevator.POSITION_HIGH_ALGAE);
         elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L3, Constants.Elevator.POSITION_L3);
         elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.L4, Constants.Elevator.POSITION_L4);
         elevatorPositionToSetpointMeters.put(ElevatorVerticalPosition.BARGE, Constants.Elevator.POSITION_BARGE);

@@ -10,6 +10,9 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -27,6 +30,10 @@ public class ElevatorTiltMechanism extends SubsystemBase {
     private double tiltMotorEncoderPosition;
     private double tiltMotorEncoderVelocity;
 
+    private boolean stallDetected;
+    private Debouncer stallDetectionDebouncer = new Debouncer(0.75, DebounceType.kRising);
+
+    private BooleanPublisher tiltMotorStallPublisher = NetworkTableInstance.getDefault().getBooleanTopic("/RBR/Elevator/TiltMotor/Stall").publish();
     private DoublePublisher tiltMotorEncoderPositionPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/TiltMotor/Position").publish();
     private DoublePublisher tiltMotorOutputCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/TiltMotor/Current").publish();
     private DoublePublisher tiltMotorVelocityPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/TiltMotor/Velocity").publish();
@@ -51,6 +58,9 @@ public class ElevatorTiltMechanism extends SubsystemBase {
         tiltMotorOutputCurrentPublisher.set(tiltMotorOutputCurrentAmps);
         tiltMotorEncoderPositionPublisher.set(tiltMotorEncoderPosition);
         tiltMotorVelocityPublisher.set(tiltMotorEncoderVelocity);
+
+        stallDetected = stallDetectionDebouncer.calculate(tiltMotorOutputCurrentAmps > 35);
+        tiltMotorStallPublisher.set(stallDetected);
     }
 
     public Command elevatorTiltXBoxControllerCommand(DoubleSupplier speedSupplier) {
@@ -67,8 +77,9 @@ public class ElevatorTiltMechanism extends SubsystemBase {
             desiredTiltPosition = ElevatorTiltPosition.OUT;
             tiltMotor.set(-Constants.Elevator.TILT_MOTOR_OUT_SPEED);
         }).until(
-            () -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR
-                && Math.abs(tiltMotorEncoderVelocity) < Constants.Elevator.TILT_MOTOR_MINIMUM_VELOCITY_THRESHOLD
+            () -> stallDetected
+        ).andThen(
+            () -> tiltMotor.set(0.0)
         );
     }
 
@@ -78,8 +89,9 @@ public class ElevatorTiltMechanism extends SubsystemBase {
             desiredTiltPosition = ElevatorTiltPosition.IN;
             tiltMotor.set(Constants.Elevator.TILT_MOTOR_IN_SPEED);
         }).until(
-            () -> tiltMotorOutputCurrentAmps > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR
-                && tiltMotorEncoderVelocity < Constants.Elevator.TILT_MOTOR_MINIMUM_VELOCITY_THRESHOLD
+            () -> stallDetected
+        ).andThen(
+            () -> tiltMotor.set(0.0)
         );
     }
 

@@ -203,6 +203,8 @@ public final class Constants {
   }
 
   public static final class Rejector {
+    public static final double REJECTOR_STALL_DEBOUNCE_TIME_THRESHOLD = 0.25;  //seconds
+    public static final double REJECTOR_CURRENT_STALL_THRESHOLD = 25.0;
     public static final double REJECTOR_MOTOR_MINIMUM_VELOCITY_THRESHOLD = 0.05;
   }
 
@@ -232,6 +234,7 @@ public final class Constants {
 
     public static final double POSITION_L1 = Units.inchesToMeters(0.0);
     public static final double POSITION_L2 = Units.inchesToMeters(4.0);
+    public static final double POSITION_HIGH_ALGAE = Units.inchesToMeters(16.0);
     public static final double POSITION_L3 = Units.inchesToMeters(20.0);
     public static final double POSITION_L4 = Units.inchesToMeters(48.0);
     public static final double POSITION_BARGE = Units.inchesToMeters(54.0);

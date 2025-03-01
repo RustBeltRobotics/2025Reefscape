@@ -10,6 +10,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -28,16 +30,14 @@ public class Rejector extends SubsystemBase {
     private final RelativeEncoder encoder;
     private boolean leftLaserSensorActive;
     private boolean rightLaserSensorActive;
-    private boolean motorStalled;
     private DigitalInput laserSensorLeft;
     private DigitalInput laserSensorRight;
 
     private double desiredSpeed;
 
     private DoublePublisher speedPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Rejector/Speed").publish();
+    private DoublePublisher velocityPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Rejector/Velocity").publish();
     private DoublePublisher outputCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Rejector/Current").publish();
-
-    private BooleanPublisher motorStallPublisher = NetworkTableInstance.getDefault().getBooleanTopic("/RBR/Rejector/IsStalled").publish();
 
     private BooleanPublisher leftLaserPublisher = NetworkTableInstance.getDefault().getBooleanTopic("/RBR/Rejector/Laser/Left").publish();
     private BooleanPublisher rightLaserPublisher = NetworkTableInstance.getDefault().getBooleanTopic("/RBR/Rejector/Laser/Right").publish();
@@ -57,21 +57,13 @@ public class Rejector extends SubsystemBase {
 
     @Override
     public void periodic() {
-        motorStalled = motorIsStalled();
         speedPublisher.set(desiredSpeed);
+        velocityPublisher.set(encoder.getVelocity());
         leftLaserSensorActive = laserSensorLeft.get();
         rightLaserSensorActive = laserSensorRight.get();
-        motorStallPublisher.set(motorStalled);
         outputCurrentPublisher.set(motor.getOutputCurrent());
         leftLaserPublisher.set(leftLaserSensorActive);
         rightLaserPublisher.set(rightLaserSensorActive);
-    }
-
-    private boolean motorIsStalled() {
-        double motorOutputCurrent = motor.getOutputCurrent();
-        double motorVelocity = encoder.getVelocity();
-        
-        return motorOutputCurrent > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && Math.abs(motorVelocity) < Constants.Rejector.REJECTOR_MOTOR_MINIMUM_VELOCITY_THRESHOLD;
     }
 
     public void stopMotor() {

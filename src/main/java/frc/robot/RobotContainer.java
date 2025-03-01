@@ -109,6 +109,11 @@ public class RobotContainer {
     driverController.leftTrigger().whileTrue(led.setLedColorWhileHeld(Color.kRed));
     driverController.rightTrigger().whileTrue(led.setLedColorWhileHeld(Color.kBlue));
 
+    //TODO: Add operator command/button to run the outtake for a 0.25 seconds 
+
+    //TODO: on detection of right distance sensor, light up right side LED one color
+    //TODO: on detection of left distance sensor, light up left side LED one color
+
     //OPERATOR bindings
     //Pressing A button moves elevator to L2 setpoint to score coral
     operatorController.a().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L2));
@@ -118,10 +123,11 @@ public class RobotContainer {
     operatorController.x().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1));
     //Pressing Y button moves elevator to L4 setpoint to score coral
     operatorController.y().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4));
-    //Pressing L or R trigger moves elevator to barge net score position
+    //Pressing R bumper moves elevator to barge net score position
     Command bargeHeightCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.BARGE);
     operatorController.rightBumper().onTrue(bargeHeightCommand);
-    operatorController.leftBumper().onTrue(bargeHeightCommand);
+    //Pressing L Bumper moves elevator to new setpoint for high algae on reef - (L3 level - 4 inches)
+    operatorController.leftBumper().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE));
 
     //Pressing Down on the D-pad starts the avoid tipping command sequence (moves elevator to bottom position and tilts it in)
     Command avoidTippingCommand = Commands.parallel(elevator.elevatorBottomCommand(), elevatorTiltMechanism.tiltInCommand());
@@ -201,10 +207,8 @@ public class RobotContainer {
     Constants.Shuffleboard.COMPETITION_TAB.add("Auto Selector", autoChooser).withPosition(0, 0).withSize(2, 1);
   }
 
-  //MJR: TODO: If we end up needing this, call it like something like this:
-    // new InstantCommand(() -> rumbleControllers(true)).andThen(new WaitCommand(1.0)).finallyDo(() -> rumbleControllers(false));
   public void rumbleControllers(boolean rumble, boolean rumbleLeft, boolean rumbleRight) {
-    double rumbleValue = rumble ? 0.5 : 0.0;
+    double rumbleValue = rumble ? 0.25 : 0.0;
     XboxController driver = driverController.getHID();
     XboxController operator = operatorController.getHID();
     
