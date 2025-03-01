@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.hardware.PowerManagement;
@@ -68,6 +69,9 @@ public class Robot extends TimedRobot {
     //allow access to photonvision coprocessor (orange pi) UIs when tethered to USB port on the rio
     // PortForwarder.add(5800, "photonvision1.local", 5800);
     // PortForwarder.add(5801, "photonvision2.local", 5800);
+
+    //Send command scheduler data to smartdashboard
+    SmartDashboard.putData(CommandScheduler.getInstance());
   }
 
   /**

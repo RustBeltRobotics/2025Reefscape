@@ -42,7 +42,12 @@ public final class Constants {
   }
 
   public static final class DioPort {
-    public static final int LASER_SENSOR = 0;
+    public static final int LASER_SENSOR_LEFT = 0;
+    public static final int LASER_SENSOR_RIGHT = 1;
+  }
+
+  public static final class PwmPort {
+    public static final int LED_PORT = 9;
   }
 
   /**
@@ -195,6 +200,10 @@ public final class Constants {
     public static final long MICROSECONDS_SINCE_COLLISION_THRESHOLD = 250000;  //0.25 seconds
 
     public static final Matrix<N3, N1> WHEEL_ODOMETRY_POSE_STANDARD_DEVIATIONS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5));
+  }
+
+  public static final class Rejector {
+    public static final double REJECTOR_MOTOR_MINIMUM_VELOCITY_THRESHOLD = 0.05;
   }
 
   public static final class Elevator {

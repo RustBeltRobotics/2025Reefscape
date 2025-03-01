@@ -6,6 +6,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.RobotContainer;
 import frc.robot.model.ElevatorVerticalPosition;
 
 import java.util.EnumMap;
@@ -260,6 +261,20 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
     private void runToTargetHeight(ElevatorVerticalPosition goalPosition) {
         this.desiredVerticalPosition = goalPosition;
+
+        //Reduce speed to 75% when the elevator is up
+        switch (desiredVerticalPosition) {
+            case L1 : 
+                RobotContainer.setMaxSpeedFactor(1.0);
+                break;
+            case L2 :
+                RobotContainer.setMaxSpeedFactor(0.75);
+                break;
+            default:
+                RobotContainer.setMaxSpeedFactor(0.5);
+                break;
+        }
+
         double goalInMeters = elevatorPositionToSetpointMeters.get(goalPosition);
         this.goalHeight = goalInMeters;
         this.atGoal = false;
@@ -288,6 +303,10 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
                 .secondaryCurrentLimit(Constants.CurrentLimit.SparkMax.SECONDARY_ELEVATOR);
 
         return sparkMaxConfig;
+    }
+
+    public Command resetEncodersCommand() {
+        return runOnce(() -> resetVerticalElevatorEncoders());
     }
 
     /**

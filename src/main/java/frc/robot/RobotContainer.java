@@ -11,6 +11,7 @@ import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.ElevatorTiltMechanism;
+import frc.robot.subsystems.LED;
 import frc.robot.subsystems.Rejector;
 import frc.robot.subsystems.VisionSystem;
 import frc.robot.util.Utilities;
@@ -26,6 +27,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -50,6 +52,7 @@ public class RobotContainer {
   private final ElevatorTiltMechanism elevatorTiltMechanism = new ElevatorTiltMechanism();
   private final Rejector rejector = new Rejector();
   private final Climber climber = new Climber();
+  private final LED led = new LED();
   private final VisionSystem visionSystem;
 
   private final SendableChooser<Command> autoChooser;
@@ -98,6 +101,13 @@ public class RobotContainer {
     //DRIVER bindings
     // Pressing A button sets forward direction to current robot heading
     driverController.a().onTrue(drivetrain.zeroPoseEstimatorAngleCommand());
+
+    // Pressing Down on the D-pad of driver controller will zero/reset vertical motor encoders of the elevator
+    driverController.povDown().onTrue(elevator.resetEncodersCommand());
+
+    //Test color LEDs when driver trigger is held while held
+    driverController.leftTrigger().whileTrue(led.setLedColorWhileHeld(Color.kRed));
+    driverController.rightTrigger().whileTrue(led.setLedColorWhileHeld(Color.kBlue));
 
     //OPERATOR bindings
     //Pressing A button moves elevator to L2 setpoint to score coral
@@ -206,5 +216,9 @@ public class RobotContainer {
       driver.setRumble(RumbleType.kRightRumble, rumbleValue);
       operator.setRumble(RumbleType.kRightRumble, rumbleValue);
     }
+  }
+
+  public static void setMaxSpeedFactor(double newSpeedFactor) {
+    MAX_SPEED_FACTOR = newSpeedFactor;
   }
 }

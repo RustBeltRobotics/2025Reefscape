@@ -28,12 +28,17 @@ public class Rejector extends SubsystemBase {
     private final RelativeEncoder encoder;
     private boolean leftLaserSensorActive;
     private boolean rightLaserSensorActive;
+    private boolean motorStalled;
     private DigitalInput laserSensorLeft;
     private DigitalInput laserSensorRight;
 
     private double desiredSpeed;
 
     private DoublePublisher speedPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Rejector/Speed").publish();
+    private DoublePublisher outputCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Rejector/Current").publish();
+
+    private BooleanPublisher motorStallPublisher = NetworkTableInstance.getDefault().getBooleanTopic("/RBR/Rejector/IsStalled").publish();
+
     private BooleanPublisher leftLaserPublisher = NetworkTableInstance.getDefault().getBooleanTopic("/RBR/Rejector/Laser/Left").publish();
     private BooleanPublisher rightLaserPublisher = NetworkTableInstance.getDefault().getBooleanTopic("/RBR/Rejector/Laser/Right").publish();
 
@@ -46,17 +51,27 @@ public class Rejector extends SubsystemBase {
         motor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         encoder = motor.getEncoder();
 
-        laserSensorLeft = new DigitalInput(0);
-        laserSensorRight = new DigitalInput(1);
+        laserSensorLeft = new DigitalInput(Constants.DioPort.LASER_SENSOR_LEFT);
+        laserSensorRight = new DigitalInput(Constants.DioPort.LASER_SENSOR_RIGHT);
     }
 
     @Override
     public void periodic() {
+        motorStalled = motorIsStalled();
         speedPublisher.set(desiredSpeed);
         leftLaserSensorActive = laserSensorLeft.get();
         rightLaserSensorActive = laserSensorRight.get();
+        motorStallPublisher.set(motorStalled);
+        outputCurrentPublisher.set(motor.getOutputCurrent());
         leftLaserPublisher.set(leftLaserSensorActive);
         rightLaserPublisher.set(rightLaserSensorActive);
+    }
+
+    private boolean motorIsStalled() {
+        double motorOutputCurrent = motor.getOutputCurrent();
+        double motorVelocity = encoder.getVelocity();
+        
+        return motorOutputCurrent > Constants.CurrentLimit.SparkMax.SMART_ELEVATOR && Math.abs(motorVelocity) < Constants.Rejector.REJECTOR_MOTOR_MINIMUM_VELOCITY_THRESHOLD;
     }
 
     public void stopMotor() {
@@ -78,11 +93,11 @@ public class Rejector extends SubsystemBase {
     }
 
     public Command getOuttakeCommand() {
-        return this.run(() -> runAtPercentage(1.0));
+        return this.startEnd(() -> runAtPercentage(1.0), () -> stopMotor());
     }
 
     public Command getIntakeCommand() {
-        return this.run(() -> runAtPercentage(-1.0));
+        return this.startEnd(() -> runAtPercentage(-1.0), () -> stopMotor());
     }
 
     public Command getRejectorOperatorCommand(DoubleSupplier valueSupplier) {
