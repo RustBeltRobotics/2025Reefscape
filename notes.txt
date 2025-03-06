@@ -1,4 +1,18 @@
 2025 TODO:
+    - Test the avoid tipping command logic (Down D-Pad on operator)
+    - Test/tune the coral outtake to position command (Start button on operator)
+    - Test/Tune Swerve Rotation motor PID values
+        - Graph using Swerve tab 
+            - /RBR/SwerveStates/Measured
+              /RBR/SwerveStates/Setpoint
+            - and/or line charts in AdvantageScope
+                - /RBR/Swerve/Rotation/Absolute/FL
+                - /RBR/Swerve/Rotation/Absolute/FR
+                - /RBR/Swerve/Rotation/Absolute/BL
+                - /RBR/Swerve/Rotation/Absolute/BR
+    - Remove / re-set camera stream widget(s) in dashboards
+    - Tune the CollisionDetector / Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G value for tele-op
+        - Graph /RBR/Gyro/Acceleration/X and /RBR/Gyro/Acceleration/Y values while driving
     - Create dashboard in Elastic with following widgets:
         - Gyro
         - Alerts
@@ -9,9 +23,6 @@
         - Command Scheduler
         - Match Time
         - Total Current draw (text box or radial gauge)
-    - Tune the CollisionDetector / Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G value
-        - Graph /RBR/Gyro/Acceleration/X and /RBR/Gyro/Acceleration/Y values while driving
-    - Verify that running elevatorVerticalStopCommand (Y button on driver controller) does not forcefully drive the elevator into the bottom stop
     - Perform test driving runs to calculate std deviations for wheel odometry and vision for pose estimator (ensure finish pose has a AprilTag visible by vision)
         1. Drive straight a set distance, measure starting robot pose vs. finish robot pose
         2. Drive sideways (stafe straight) a set distance, measure starting robot pose vs. finish robot pose
