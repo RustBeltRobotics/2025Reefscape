@@ -3,6 +3,7 @@ package frc.robot.util;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import frc.robot.hardware.MultiGyro;
@@ -33,8 +34,13 @@ public class CollisionDetector {
         currentLinearAccelerationY = gyro.getAccelerationY();
         double currentJerkX = Math.abs(currentLinearAccelerationX - lastLinearAccelerationX);
         double currentJerkY = Math.abs(currentLinearAccelerationY - lastLinearAccelerationY);
+        double collisionThreshold = Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G_TELE_OP;
 
-        if (currentJerkX > Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G || currentJerkY > Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G) {
+        if (DriverStation.isAutonomous()) {
+            collisionThreshold = Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G_AUTONOMOUS;
+        }
+
+        if (currentJerkX > collisionThreshold || currentJerkY > collisionThreshold) {
             collisionDetected = true;
             collisionDetectedAlert.set(true);
             collisionTimeMicroSeconds = RobotController.getFPGATime();
