@@ -9,6 +9,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -22,6 +23,7 @@ import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -65,6 +67,7 @@ public class Drivetrain extends SubsystemBase {
     private double pitch;
     private double roll;
     private double yaw;
+    private int rotationPidRunCount = 0;
 
     private boolean pitchTipDetected = false;
     private boolean rollTipDetected = false;
@@ -76,9 +79,15 @@ public class Drivetrain extends SubsystemBase {
     private SwerveModuleState[] swerveModuleStates = { new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState() };
 
     //Shuffleboard
-    private static GenericEntry gyroEntry = Constants.Shuffleboard.COMPETITION_TAB.add("Gryoscope Angle", 0)
+    private static GenericEntry poseEstimatorAngleEntry = Constants.Shuffleboard.COMPETITION_TAB.add("PoseEstimator Angle", 0)
             .withWidget(BuiltInWidgets.kGyro)
             .withPosition(0, 1)
+            .withSize(3, 4)
+            .getEntry();
+
+    private static GenericEntry gyroYawEntry = Constants.Shuffleboard.COMPETITION_TAB.add("Gyro Yaw Angle", 0)
+            .withWidget(BuiltInWidgets.kGyro)
+            .withPosition(4, 1)
             .withSize(3, 4)
             .getEntry();
 
@@ -243,6 +252,10 @@ public class Drivetrain extends SubsystemBase {
         resetPoseEstimateUsingVision();
     }
 
+    public Command resetPoseUsingVisionCommand() {
+        return runOnce(() -> resetPoseEstimateUsingVision());
+    }
+
     //will return true if pose was able to be reset using vision system
     public boolean resetPoseEstimateUsingVision() {
         if (Constants.Vision.VISION_ENABLED) {
@@ -251,6 +264,7 @@ public class Drivetrain extends SubsystemBase {
             if (firstVisionPoseEstimationResult.isPresent()) {
                 Pose2d estimatedRobotPose = firstVisionPoseEstimationResult.get().getEstimatedRobotPose().estimatedPose.toPose2d();
                 poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
+                swerveOdometry.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
                 visionResetPoseEstimatePublisher.set(estimatedRobotPose);
 
                 return true;
@@ -340,6 +354,22 @@ public class Drivetrain extends SubsystemBase {
         updateTelemetry();
     }
 
+    //This is for testing/tuning PID values for module rotation
+    public Command rotateWheels45DegreesCommand() {
+        return runOnce(() -> {
+            //first call will move to 0 degrees, next to 45, then 90... 
+            int desiredAngle = rotationPidRunCount * 45;
+            double constrainedAngle = MathUtil.inputModulus(desiredAngle * 1.0, -180.0, 180.0);
+            int actualAngle = Double.valueOf(constrainedAngle).intValue();
+            DataLogManager.log("RBR: Rotating wheels to " + actualAngle + " degrees");
+            frontLeftModule.lockModule(actualAngle);
+            frontRightModule.lockModule(actualAngle);
+            backLeftModule.lockModule(actualAngle);
+            backRightModule.lockModule(actualAngle);
+            rotationPidRunCount++;
+        });
+    }
+
     //update state of swerve modules based on current chassis speeds
     private void updateSwerveModuleStates() {
         swerveModuleStates = Constants.Kinematics.SWERVE_KINEMATICS.toSwerveModuleStates(chassisSpeeds);
@@ -375,7 +405,8 @@ public class Drivetrain extends SubsystemBase {
         Pose2d swerveOdometryPosition = getSwerveOdometryPose();
         double currentRobotAngle = estimatedPosition.getRotation().getDegrees();
         // Publish gyro angle to shuffleboard
-        gyroEntry.setDouble(currentRobotAngle);
+        poseEstimatorAngleEntry.setDouble(currentRobotAngle);
+        gyroYawEntry.setDouble(getGyroscopeAngle());
 
         // Advantage scope things
         poseEstimatePublisher.set(estimatedPosition);
