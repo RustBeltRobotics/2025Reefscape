@@ -20,10 +20,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathfindingCommand;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -49,7 +48,7 @@ public class RobotContainer {
   private final CommandXboxController operatorController = new CommandXboxController(Constants.DriverStation.CONTROLLER_PORT_OPERATOR);
   private final Drivetrain drivetrain = new Drivetrain();
   private final Elevator elevator = new Elevator();
-  private final ElevatorTiltMechanism elevatorTiltMechanism = new ElevatorTiltMechanism();
+  private final ElevatorTiltMechanism elevatorTiltMechanism = new ElevatorTiltMechanism(elevator);
   private final Rejector rejector = new Rejector();
   private final Climber climber = new Climber();
   private final LED led = new LED();
@@ -60,6 +59,8 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, IO devices, and commands. */
   public RobotContainer() {
+    registerPathPlannerNamedCommands();
+    
     autoChooser = AutoBuilder.buildAutoChooser();
 
     driveTrainSpeedChooser.setDefaultOption("100%", 1.0);
@@ -77,15 +78,27 @@ public class RobotContainer {
     }
 
     setDefaultCommands();
-    // Configure the trigger bindings
     configureBindings();
-
-    //TODO: register NamedCommands for pathplanner
-
     configureAutos();
 
     // Speed up initial run of Pathplanner commands
     PathfindingCommand.warmupCommand().schedule();
+  }
+
+  private void registerPathPlannerNamedCommands() {
+    //TODO: When removing PP named commands, paths or autos - make sure you clean the deploy folder on the Rio!
+    // See https://www.chiefdelphi.com/t/pathplanner-autochooser-remembers-deleted-autos/455940/5
+    Command intakeCommand = rejector.getIntakeCommand().withTimeout(1.0);
+    Command outtakeCommand = rejector.getOuttakeCommand().withTimeout(1.0);
+    Command elevatorL1Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1);
+    Command elevatorHighAlgaeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE);
+    Command elevatorL4Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4);
+    NamedCommands.registerCommand("coral-outtake", outtakeCommand);
+    NamedCommands.registerCommand("algae-intake", outtakeCommand);
+    NamedCommands.registerCommand("algae-outtake", intakeCommand);
+    NamedCommands.registerCommand("elevator-l1", elevatorL1Command);
+    NamedCommands.registerCommand("elevator-high-algae", elevatorHighAlgaeCommand);
+    NamedCommands.registerCommand("elevator-l4", elevatorL4Command);
   }
 
   /**
@@ -101,6 +114,12 @@ public class RobotContainer {
     //DRIVER bindings
     // Pressing A button sets forward direction to current robot heading
     driverController.a().onTrue(drivetrain.zeroPoseEstimatorAngleCommand());
+    // Pressing B button will reset the pose estimator's current position using the first April Tag reading it sees
+    driverController.b().onTrue(drivetrain.resetPoseUsingVisionCommand());
+
+    // Pressing X button rotates swerve wheels 45 degrees
+    // TODO: remove this, it's only intended for swerve rotation PID tuning/testing!
+    driverController.x().onTrue(drivetrain.rotateWheels45DegreesCommand());
 
     // Pressing Down on the D-pad of driver controller will zero/reset vertical motor encoders of the elevator
     driverController.povDown().onTrue(elevator.resetEncodersCommand());
@@ -109,7 +128,7 @@ public class RobotContainer {
     driverController.leftTrigger().whileTrue(led.setLedColorWhileHeld(Color.kRed));
     driverController.rightTrigger().whileTrue(led.setLedColorWhileHeld(Color.kBlue));
 
-    //TODO: Add operator command/button to run the outtake for a 0.25 seconds 
+    //TODO: Add operator command/button to run the outtake for 0.25 seconds 
 
     //TODO: on detection of right distance sensor, light up right side LED one color
     //TODO: on detection of left distance sensor, light up left side LED one color
@@ -129,19 +148,25 @@ public class RobotContainer {
     //Pressing L Bumper moves elevator to new setpoint for high algae on reef - (L3 level - 4 inches)
     operatorController.leftBumper().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE));
 
-    //Pressing Down on the D-pad starts the avoid tipping command sequence (moves elevator to bottom position and tilts it in)
-    Command avoidTippingCommand = Commands.parallel(elevator.elevatorBottomCommand(), elevatorTiltMechanism.tiltInCommand());
+    //Pressing Down on the D-pad runs the avoid tipping command sequence: 
+    // 1. Moves elevator to bottom position and tilts it in (if it is at a safe height to tilt in)
+    // 2. Tilts the elevator back out a half second after completing #1 above
+    Command avoidTippingCommand = Commands.parallel(elevator.elevatorBottomCommand(), elevatorTiltMechanism.tipAvoidanceTiltCommand())
+      .andThen(Commands.waitSeconds(0.5))
+      .andThen(elevatorTiltMechanism.tiltOutCommand());
     operatorController.povDown().onTrue(avoidTippingCommand);
-    //Pressing right trigger performs outtake
+    //Pressing Right Trigger performs outtake
     operatorController.rightTrigger().whileTrue(rejector.getOuttakeCommand());
-    //Pressing left trigger performs intake
+    //Pressing Left Trigger performs intake
     operatorController.leftTrigger().whileTrue(rejector.getIntakeCommand());
     //Pressing Left on the D-pad tilts elevator in to the robot frame
     operatorController.povLeft().onTrue(elevatorTiltMechanism.tiltInCommand());
     //Pressing Right on the D-pad tilts elevator out to the fully vertical position
     operatorController.povRight().onTrue(elevatorTiltMechanism.tiltOutCommand());
+    //Pressing Start button moves the coral out slightly to make reef alignment easier
+    operatorController.start().onTrue(rejector.getOuttakeCommand().withTimeout(0.2));
 
-    //TODO: Add explicit elevator tiltOut prior to raising elevator / after loweing elevator
+    //TODO: Add explicit elevator tiltOut prior to raising elevator / after lowering elevator
 
     //Pressing Left or Right on the D-pad toggles between tilting the elevator out and in
     // Command toggleElevatorTiltCommand = elevatorTiltMechanism.toggleElevatorTiltCommand();
@@ -200,7 +225,14 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.getSelected();
+    Command chosenAutoCommand = autoChooser.getSelected();
+    Command elevatorTiltOutCommand = elevatorTiltMechanism.tiltOutCommand().withTimeout(1.0);
+    if (chosenAutoCommand != null) {
+      //Before starting auto, ensure the elevator is tilted out into the vertical position
+      return Commands.sequence(elevatorTiltOutCommand, chosenAutoCommand);
+    } else {
+      return elevatorTiltOutCommand;
+    }
   }
 
   public void configureAutos() {
