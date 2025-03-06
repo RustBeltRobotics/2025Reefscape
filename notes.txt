@@ -1,10 +1,11 @@
 2025 TODO:
     - Test the avoid tipping command logic (Down D-Pad on operator)
     - Test/tune the coral outtake to position command (Start button on operator)
-    - Test/Tune Swerve Rotation motor PID values
+    - Test/Tune Swerve Rotation motor PID values (X button on driver)
         - Graph using Swerve tab 
             - /RBR/SwerveStates/Measured
               /RBR/SwerveStates/Setpoint
+              /RBR/ChassisSpeed/Setpoint
             - and/or line charts in AdvantageScope
                 - /RBR/Swerve/Rotation/Absolute/FL
                 - /RBR/Swerve/Rotation/Absolute/FR

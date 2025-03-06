@@ -6,6 +6,7 @@ package frc.robot;
 
 import frc.robot.commands.DefaultClimbCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
+import frc.robot.commands.RobotOrientedDriveCommand;
 import frc.robot.model.ElevatorVerticalPosition;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drivetrain;
@@ -54,6 +55,10 @@ public class RobotContainer {
   private final LED led = new LED();
   private final VisionSystem visionSystem;
 
+  private final DoubleSupplier driverTranslationXSupplier;
+  private final DoubleSupplier driverTranslationYSupplier;
+  private final DoubleSupplier driverRotationSupplier;
+    
   private final SendableChooser<Command> autoChooser;
   private final SendableChooser<Double> driveTrainSpeedChooser = new SendableChooser<>();
 
@@ -77,6 +82,10 @@ public class RobotContainer {
       visionSystem = null;
     }
 
+    driverTranslationXSupplier = () -> -Utilities.modifyDriverAxis(driverController.getLeftY(), 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
+    driverTranslationYSupplier = () -> -Utilities.modifyDriverAxis(driverController.getLeftX(), 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
+    driverRotationSupplier = () -> -Utilities.modifyDriverAxis(driverController.getRightX(), 0.05) * Constants.Kinematics.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND * MAX_SPEED_FACTOR;
+    
     setDefaultCommands();
     configureBindings();
     configureAutos();
@@ -117,6 +126,10 @@ public class RobotContainer {
     // Pressing B button will reset the pose estimator's current position using the first April Tag reading it sees
     driverController.b().onTrue(drivetrain.resetPoseUsingVisionCommand());
 
+    //Drive in robot oriented mode while the left trigger is held
+    RobotOrientedDriveCommand robotOrientedDriveCommand = new RobotOrientedDriveCommand(drivetrain, driverTranslationXSupplier, driverTranslationYSupplier, driverRotationSupplier);
+    driverController.leftTrigger().whileTrue(robotOrientedDriveCommand);
+
     // Pressing X button rotates swerve wheels 45 degrees
     // TODO: remove this, it's only intended for swerve rotation PID tuning/testing!
     driverController.x().onTrue(drivetrain.rotateWheels45DegreesCommand());
@@ -125,8 +138,8 @@ public class RobotContainer {
     driverController.povDown().onTrue(elevator.resetEncodersCommand());
 
     //Test color LEDs when driver trigger is held while held
-    driverController.leftTrigger().whileTrue(led.setLedColorWhileHeld(Color.kRed));
-    driverController.rightTrigger().whileTrue(led.setLedColorWhileHeld(Color.kBlue));
+    driverController.leftBumper().whileTrue(led.setLedColorWhileHeld(Color.kRed));
+    driverController.rightBumper().whileTrue(led.setLedColorWhileHeld(Color.kBlue));
 
     //TODO: Add operator command/button to run the outtake for 0.25 seconds 
 
@@ -200,11 +213,7 @@ public class RobotContainer {
     // DoubleSupplier translationXSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getLeftY(), 1.0, 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
     // DoubleSupplier translationYSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getLeftX(), 1.0, 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
     // DoubleSupplier rotationSupplier = () -> -Utilities.modifyAxisGeneric(driverController.getRightX(), 1.0, 0.05) * Constants.Kinematics.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND * MAX_SPEED_FACTOR;
-    DoubleSupplier translationXSupplier = () -> -Utilities.modifyDriverAxis(driverController.getLeftY(), 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
-    DoubleSupplier translationYSupplier = () -> -Utilities.modifyDriverAxis(driverController.getLeftX(), 0.05) * Constants.Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND * MAX_SPEED_FACTOR;
-    DoubleSupplier rotationSupplier = () -> -Utilities.modifyDriverAxis(driverController.getRightX(), 0.05) * Constants.Kinematics.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND * MAX_SPEED_FACTOR;
-    
-    drivetrain.setDefaultCommand(new FieldOrientedDriveCommand(drivetrain, translationXSupplier, translationYSupplier, rotationSupplier));
+    drivetrain.setDefaultCommand(new FieldOrientedDriveCommand(drivetrain, driverTranslationXSupplier, driverTranslationYSupplier, driverRotationSupplier));
 
     //TODO: This seems to conflict with the pre-defined height bindings
     // DoubleSupplier elevatorVerticalSpeedSupplier = () -> -Utilities.modifyAxisGeneric(operatorController.getLeftY(), 1.0, 0.05);
