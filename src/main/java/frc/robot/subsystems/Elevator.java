@@ -345,6 +345,10 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         rightEncoder.setPosition(0.0);
     }
 
+    public ElevatorVerticalPosition getDesiredVerticalPosition() {
+        return desiredVerticalPosition;
+    }
+
     @Override
     public void close() throws Exception {
         m_mech2d.close();

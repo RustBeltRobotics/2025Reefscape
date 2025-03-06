@@ -20,9 +20,11 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.model.ElevatorTiltPosition;
+import frc.robot.model.ElevatorVerticalPosition;
 
 public class ElevatorTiltMechanism extends SubsystemBase {
 
+    private final Elevator elevator; //we need knowledge of elevator height level to perform some conditional tilt in/out commands 
     private final SparkMax tiltMotor;  //this is for forward/backward angling motion of the elevator - note: starting position is angled inside robot perimeter
     private final RelativeEncoder tiltEncoder;
     private ElevatorTiltPosition desiredTiltPosition = ElevatorTiltPosition.IN;  //robot always should start with elevator tilted inwards
@@ -38,7 +40,8 @@ public class ElevatorTiltMechanism extends SubsystemBase {
     private DoublePublisher tiltMotorOutputCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/TiltMotor/Current").publish();
     private DoublePublisher tiltMotorVelocityPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/TiltMotor/Velocity").publish();
 
-    public ElevatorTiltMechanism() {
+    public ElevatorTiltMechanism(Elevator elevator) {
+        this.elevator = elevator;
         tiltMotor = new SparkMax(Constants.CanID.ELEVATOR_EXTEND_RETRACT_MOTOR, MotorType.kBrushless);
         SparkMaxConfig tiltConfig = new SparkMaxConfig();
         tiltConfig.inverted(false).idleMode(IdleMode.kBrake);
@@ -93,6 +96,19 @@ public class ElevatorTiltMechanism extends SubsystemBase {
         ).andThen(
             () -> tiltMotor.set(0.0)
         );
+    }
+
+    public Command tipAvoidanceTiltCommand() {
+        return new ConditionalCommand(tiltInCommand(), tiltOutCommand(), () -> {
+            ElevatorVerticalPosition verticalPosition = elevator.getDesiredVerticalPosition();
+            boolean isTippedOut = desiredTiltPosition == ElevatorTiltPosition.OUT;
+            boolean isSafeVerticalHeight = verticalPosition == ElevatorVerticalPosition.L1
+                || verticalPosition == ElevatorVerticalPosition.L2 
+                || verticalPosition == ElevatorVerticalPosition.HIGH_ALGAE
+                || verticalPosition == ElevatorVerticalPosition.L3;
+
+            return isTippedOut && isSafeVerticalHeight;
+        });
     }
 
     private void resetTiltEncoder() {
