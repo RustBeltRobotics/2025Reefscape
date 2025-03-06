@@ -80,13 +80,13 @@ public class VisionSystem {
         fieldLayout.setOrigin(OriginPosition.kBlueAllianceWallRightSide);
 
         VisionCamera frontCenterCamera = new VisionCamera(Constants.Vision.CameraName.FRONT_CENTER, CameraPosition.FRONT_CENTER,
-            Constants.Vision.CameraPose.FRONT_CENTER, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);   
+            Constants.Vision.CameraPose.FRONT_CENTER, Constants.Vision.POSE_STRATEGY, fieldLayout);   
         // VisionCamera frontRightCamera = new VisionCamera(Constants.Vision.CameraName.FRONT_RIGHT, CameraPosition.FRONT_RIGHT,
         //     Constants.Vision.CameraPose.FRONT_RIGHT, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);
         VisionCamera backRightCamera = new VisionCamera(Constants.Vision.CameraName.BACK_RIGHT, CameraPosition.BACK_RIGHT,
-            Constants.Vision.CameraPose.BACK_RIGHT, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);
+            Constants.Vision.CameraPose.BACK_RIGHT, Constants.Vision.POSE_STRATEGY, fieldLayout);
         VisionCamera backLeftCamera = new VisionCamera(Constants.Vision.CameraName.BACK_LEFT, CameraPosition.BACK_LEFT,
-            Constants.Vision.CameraPose.BACK_LEFT, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);
+            Constants.Vision.CameraPose.BACK_LEFT, Constants.Vision.POSE_STRATEGY, fieldLayout);
         visionCameras.add(frontCenterCamera);           
         // visionCameras.add(frontRightCamera);           
         visionCameras.add(backRightCamera);           

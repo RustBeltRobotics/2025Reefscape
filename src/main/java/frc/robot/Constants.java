@@ -195,7 +195,8 @@ public final class Constants {
     public static final double TIP_THRESHOLD_DEGREES = 7.0;
 
     /* Change in linear acceleration greater than this value will trigger collision detected */
-    public static final double COLLISION_THRESHOLD_DELTA_G = 0.5;
+    public static final double COLLISION_THRESHOLD_DELTA_G_TELE_OP = 1.5;  //TODO: verify this value for tele-op using advantagescope gyro graph
+    public static final double COLLISION_THRESHOLD_DELTA_G_AUTONOMOUS = 0.9;
     /* Pose estimate should not be reset until after this long after collision */
     public static final long MICROSECONDS_SINCE_COLLISION_THRESHOLD = 250000;  //0.25 seconds
 
@@ -262,18 +263,22 @@ public final class Constants {
     public static final RobotConfig ROBOT_CONFIG = new RobotConfig(Constants.Kinematics.LOADED_MASS, Constants.Kinematics.MOMENT_OF_INTERIA,
       MODULE_CONFIG, Constants.Kinematics.DRIVETRAIN_TRACKWIDTH_METERS);
       
-    public static final double rotation_P = 1.5;
+    //TODO: tune this - max xy error seen roughly 1 - 0.33
+    // public static final double rotation_P = 1.5;
+    public static final double rotation_P = 2.5;
     public static final double rotation_I = 0.0;
     public static final double rotation_D = 0.0;
 
-    public static final double translation_P = 1.0;
+    //TODO: tune this - max xy error seen roughly 1 - 0.33
+    // public static final double translation_P = 1.0;
+    public static final double translation_P = 2.5;
     public static final double translation_I = 0.0;
     public static final double translation_D = 0.0;
   }
 
   public static final class Vision {
     //TODO: Re-enable this
-    public static final boolean VISION_ENABLED = false;
+    public static final boolean VISION_ENABLED = true;
     public static final int APRIL_TAG_PIPELINE_INDEX = 0;
     public static final String ARDUCAM_MODEL = "OV9281";
     public static final double POSE_AMBIGUITY_CUTOFF = 0.2;  //https://docs.photonvision.org/en/latest/docs/apriltag-pipelines/3D-tracking.html#ambiguity
@@ -283,7 +288,9 @@ public final class Constants {
     public static final double DISTANCE_CUTOFF = 4.0;  //Tag readings beyond this distance (in meters) will be considered invalid
     public static final double DISTANCE_WEIGHT = 7.0;
     public static final int TAG_PRESENCE_WEIGHT = 10;
-    public static final PoseStrategy POSE_STRATEGY = PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR;
+    //TODO: Update this for competition to use PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR
+    // April tag posiitions in our lab are not in accurate enough positions to use multi-tag strategy
+    public static final PoseStrategy POSE_STRATEGY = PoseStrategy.LOWEST_AMBIGUITY;
 
     /**
      * Standard deviations for vision measurements. Increase these numbers to trust your
@@ -302,7 +309,7 @@ public final class Constants {
      */
     public static final class CameraName {
       //Note: these names are set in hardware via https://docs.arducam.com/UVC-Camera/Serial-Number-Tool-Guide/
-      public static final String FRONT_CENTER = "Arducam_OV9281_USB_Camera-2";
+      public static final String FRONT_CENTER = "Arducam_OV9281_USB_Camera-4";
       public static final String BACK_RIGHT = "Arducam_OV9281_USB_Camera-3";
       public static final String BACK_LEFT = "Arducam_OV9281_USB_Camera-1";
     }
@@ -311,9 +318,6 @@ public final class Constants {
      * Mounting position of the cameras on the Robot
      */
     public static final class CameraPose {
-      private static final double CAM_XY_FROM_CENTER_OF_ROBOT = Units.inchesToMeters(10.0625);
-      private static final double CAM_Z_FROM_FLOOR = Units.inchesToMeters(8.5);
-      private static final double CAM_PITCH_ANGLE = -Units.degreesToRadians(25.0);
       //Note: these are robot to camera poses (position from center of robot to camera lens) - see also edu.wpi.first.math.ComputerVisionUtil.objectToRobotPose()
       //In transform3d - Translation3d values: x+ = forward, y+ = left, z+ = up, Rotation3d is rotation around the transform3d axes
       // https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
@@ -323,19 +327,16 @@ public final class Constants {
       //example - https://github.com/Mechanical-Advantage/RobotCode2024/blob/main/src/main/java/org/littletonrobotics/frc2024/subsystems/apriltagvision/AprilTagVisionConstants.java#L30
       //x+, y+, z+, (0, -degrees, 0).rotateBy(0, 0, 45 degrees)
 
-      //TODO: Side cameras are 27" up off the floor, approx 9" out from center of robot (side to side, 0.0 back to front)
-
-      //TODO: Re-measure this, it's just an approximation
-      public static final Transform3d FRONT_CENTER = new Transform3d(Units.inchesToMeters(10.0), 0.0, Units.inchesToMeters(16.25), 
+      public static final Transform3d FRONT_CENTER = new Transform3d(Units.inchesToMeters(14.0), 0.0, Units.inchesToMeters(16.0), 
         new Rotation3d(0, 0, 0));  //front center - photonvision1
       //x+, y-, z+, (0, -degrees, 0).rotateBy(0, 0, -45 degrees)
       // public static final Transform3d FRONT_RIGHT = new Transform3d(CAM_XY_FROM_CENTER_OF_ROBOT, -CAM_XY_FROM_CENTER_OF_ROBOT, CAM_Z_FROM_FLOOR, 
       //   new Rotation3d(0, CAM_PITCH_ANGLE, 0).rotateBy(new Rotation3d(0, 0, -Units.degreesToRadians(45))));  //front right - photonvision2
       //x-, y-, z+, (0, -degrees, 0).rotateBy(0, 0, -135 degrees)
-      public static final Transform3d BACK_RIGHT = new Transform3d(0, -Units.inchesToMeters(9.0), Units.inchesToMeters(27.5), 
+      public static final Transform3d BACK_RIGHT = new Transform3d(Units.inchesToMeters(9.5), -Units.inchesToMeters(9.0), Units.inchesToMeters(11.0), 
         new Rotation3d(0, 0, 0).rotateBy(new Rotation3d(0, 0, -Units.degreesToRadians(90))));  //back right - photonvision1
       //x-, y+, z+, (0, -degrees, 0).rotateBy(0, 0, 135 degrees)
-      public static final Transform3d BACK_LEFT = new Transform3d(0, Units.inchesToMeters(9.0), Units.inchesToMeters(27.0),
+      public static final Transform3d BACK_LEFT = new Transform3d(Units.inchesToMeters(9.5), Units.inchesToMeters(9.0), Units.inchesToMeters(11.0),
         new Rotation3d(0, 0, 0).rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(90))));  //back left - photonvision2
     }
   }
