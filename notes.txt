@@ -1,6 +1,5 @@
 2025 TODO:
     - Test the avoid tipping command logic (Down D-Pad on operator)
-    - Test/tune the coral outtake to position command (Start button on operator)
     - Test/Tune Swerve Rotation motor PID values (X button on driver)
         - Graph using Swerve tab 
             - /RBR/SwerveStates/Measured
@@ -11,6 +10,11 @@
                 - /RBR/Swerve/Rotation/Absolute/FR
                 - /RBR/Swerve/Rotation/Absolute/BL
                 - /RBR/Swerve/Rotation/Absolute/BR
+    - Test AprilTag readability from different starting points/angles on robot starting line
+    - Test/verify distance accuracy from AprilTag pipeline output in photonvision UI
+        - measure actual distance from lens to tag using measuring tape, compare to value output by UI
+        - compare close vs. medium vs. far placement
+    - Test LED Subsystem (L/R bumpers on driver)
     - Remove / re-set camera stream widget(s) in dashboards
     - Tune the CollisionDetector / Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G value for tele-op
         - Graph /RBR/Gyro/Acceleration/X and /RBR/Gyro/Acceleration/Y values while driving

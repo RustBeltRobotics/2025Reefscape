@@ -195,7 +195,7 @@ public final class Constants {
     public static final double TIP_THRESHOLD_DEGREES = 7.0;
 
     /* Change in linear acceleration greater than this value will trigger collision detected */
-    public static final double COLLISION_THRESHOLD_DELTA_G_TELE_OP = 1.5;  //TODO: verify this value for tele-op using advantagescope gyro graph
+    public static final double COLLISION_THRESHOLD_DELTA_G_TELE_OP = 1.6;  //TODO: verify this value for tele-op using advantagescope gyro graph
     public static final double COLLISION_THRESHOLD_DELTA_G_AUTONOMOUS = 0.9;
     /* Pose estimate should not be reset until after this long after collision */
     public static final long MICROSECONDS_SINCE_COLLISION_THRESHOLD = 250000;  //0.25 seconds
@@ -235,9 +235,9 @@ public final class Constants {
 
     public static final double POSITION_L1 = Units.inchesToMeters(0.0);
     public static final double POSITION_L2 = Units.inchesToMeters(4.0);
-    public static final double POSITION_HIGH_ALGAE = Units.inchesToMeters(16.0);
+    public static final double POSITION_HIGH_ALGAE = Units.inchesToMeters(15.0);
     public static final double POSITION_L3 = Units.inchesToMeters(20.0);
-    public static final double POSITION_L4 = Units.inchesToMeters(48.0);
+    public static final double POSITION_L4 = Units.inchesToMeters(46.5); //was 48
     public static final double POSITION_BARGE = Units.inchesToMeters(54.0);
 
     //tolerable error distance in meters (i.e. is the current height close enough to the goal?)
