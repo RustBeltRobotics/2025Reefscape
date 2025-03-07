@@ -14,37 +14,30 @@ public class LED extends SubsystemBase {
 
     private AddressableLED addressableLED;
     private AddressableLEDBuffer buffer;
-    private boolean ledRunning;
 
     public LED() {
         addressableLED = new AddressableLED(Constants.PwmPort.LED_PORT);
         buffer = new AddressableLEDBuffer(LED_ADDRESSABLE_UNITS);
         addressableLED.setLength(buffer.getLength());
+        addressableLED.start();
     }
 
-    public Command setLedColorWhileHeld(Color color) {
+    @Override
+    public void periodic() {
+        // Periodically send the latest LED color data to the LED strip for it to display
+        addressableLED.setData(buffer);
+    }
+
+    public Command setLedColorCommand(Color color) {
         LEDPattern redPattern = LEDPattern.solid(color);
         redPattern.applyTo(buffer);
         addressableLED.setData(buffer);
 
-        return startEnd(() -> changeColor(color), () -> stopLEDs());
+        return runOnce(() -> changeColor(color));
     }
 
-    private void stopLEDs() {
-        if (ledRunning) {
-            addressableLED.stop();
-            ledRunning = false;
-        }
-    }
-
-    private void changeColor(Color color) {
-        LEDPattern redPattern = LEDPattern.solid(Color.kRed);
+    public void changeColor(Color color) {
+        LEDPattern redPattern = LEDPattern.solid(color);
         redPattern.applyTo(buffer);
-        addressableLED.setData(buffer);
-
-        if (!ledRunning) {
-            addressableLED.start();
-            ledRunning = true;
-        }
     }
 }
