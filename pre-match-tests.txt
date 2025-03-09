@@ -1,0 +1,11 @@
+Before each match, run the following tests to verify subsystems are operating as expected:
+    - Swerve forward / backward, strafe L/R, rotate
+    - Intake / outtake
+    - Elevator up/down (avoid going over L2 in the pits)
+    - Elevator tilt in/out
+    - Laser distance sensors (check controller rumble)
+    - Make sure climber is set / wratcheted properly
+    - Verify front IR light is on (use camera phone to see purple glow or look for faint red glow without camera)
+    - Verify all cameras operational in photonvision dashboards
+        - http://photonvision1.local:5800/#/dashboard
+        - http://photonvision2.local:5800/#/dashboard
