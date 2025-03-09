@@ -285,7 +285,7 @@ public final class Constants {
     public static final double POSE_AMBIGUITY_SHIFTER = 0.2;
     public static final double POSE_AMBIGUITY_MULTIPLIER = 4.0;
     public static final double NOISY_DISTANCE_METERS = 2.5;  //distance beyond which vision measurements are noisy
-    public static final double DISTANCE_CUTOFF = 4.0;  //Tag readings beyond this distance (in meters) will be considered invalid
+    public static final double DISTANCE_CUTOFF = 3.0;  //Tag readings beyond this distance (in meters) will be considered invalid
     public static final double DISTANCE_WEIGHT = 7.0;
     public static final int TAG_PRESENCE_WEIGHT = 10;
     //TODO: Update this for competition to use PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR
@@ -300,8 +300,8 @@ public final class Constants {
      * See also https://www.chiefdelphi.com/t/how-do-i-understand-standard-deviation-in-the-poseestimator-class/411492/10?u=mrokitka
      */
     public static final Matrix<N3, N1> DEFAULT_VISION_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.9, 0.9, 0.9);
-    public static final Matrix<N3, N1> SINGLE_TAG_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.9, 0.9, Units.degreesToRadians(20));
-    public static final double MULTI_TAG_XY_PER_TAG_STANDARD_DEVIATION = 0.6;
+    public static final Matrix<N3, N1> SINGLE_TAG_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.6, 0.6, Units.degreesToRadians(20));
+    public static final double MULTI_TAG_XY_PER_TAG_STANDARD_DEVIATION = 0.15;
     public static final double MULTI_TAG_THETA_STANDARD_DEVIATION = Units.degreesToRadians(10);
     
     /**
