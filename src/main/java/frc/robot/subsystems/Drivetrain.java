@@ -23,8 +23,10 @@ import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -50,6 +52,7 @@ public class Drivetrain extends SubsystemBase {
 
     private VisionSystem visionSystem;  //set this externally if you want to use vision measurements for odometry
 
+    private Alert odometryDebugAlert = new Alert("Test Odometry debug", AlertType.kInfo);
     /**
      * For user to reset zero for "forward" on the robot while maintaining absolute
      * field zero for odometry
@@ -71,6 +74,7 @@ public class Drivetrain extends SubsystemBase {
 
     private boolean pitchTipDetected = false;
     private boolean rollTipDetected = false;
+    private boolean wheelRotationPidTesting = false;
     private boolean wheelsLockedX = false; // Boolean statement to control locking the wheels in an X-position
 
     private final SwerveDriveOdometry swerveOdometry;
@@ -126,6 +130,7 @@ public class Drivetrain extends SubsystemBase {
     private DoublePublisher linearAccelerationYPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Gyro/Acceleration/Y").publish();
 
     public Drivetrain() {
+        odometryDebugAlert.set(true);
         RobotConfig ppRobotConfig = Constants.PathPlanner.ROBOT_CONFIG;
 
         // Configure AutoBuilder last
@@ -248,6 +253,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public void resetPose(Pose2d pose) {
+        odometryDebugAlert.setText("RBR: resetPose - angle degrees = " + pose.getRotation().getDegrees());
         poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), pose);
         resetPoseEstimateUsingVision();
     }
@@ -259,16 +265,33 @@ public class Drivetrain extends SubsystemBase {
     //will return true if pose was able to be reset using vision system
     public boolean resetPoseEstimateUsingVision() {
         if (Constants.Vision.VISION_ENABLED) {
+            boolean poseReset = false;
             //This will force initial robot pose using vision system - overriding the initial pose set by PathPlanner auto
+            List<VisionPoseEstimationResult> potentialPoses = visionSystem.getRobotPoseEstimationResults();
+            for (VisionPoseEstimationResult poseEstimationResult : potentialPoses) {
+                if (!poseReset) {
+                    Pose2d estimatedRobotPose = poseEstimationResult.getEstimatedRobotPose().estimatedPose.toPose2d();
+                    odometryDebugAlert.setText("RBR: resetPoseUsingVision - pose angle degrees = " + estimatedRobotPose.getRotation().getDegrees());
+                    poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
+                    swerveOdometry.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
+                    visionResetPoseEstimatePublisher.set(estimatedRobotPose);
+                }
+            }
+
+            return poseReset;
+
+/* 
             Optional<VisionPoseEstimationResult> firstVisionPoseEstimationResult = visionSystem.getRobotPoseEstimationResults().stream().findFirst();
             if (firstVisionPoseEstimationResult.isPresent()) {
                 Pose2d estimatedRobotPose = firstVisionPoseEstimationResult.get().getEstimatedRobotPose().estimatedPose.toPose2d();
+                odometryDebugAlert.setText("RBR: resetPoseUsingVision - pose angle degrees = " + estimatedRobotPose.getRotation().getDegrees());
                 poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
                 swerveOdometry.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
                 visionResetPoseEstimatePublisher.set(estimatedRobotPose);
 
                 return true;
             }
+*/
         }
 
         return false;
@@ -357,15 +380,16 @@ public class Drivetrain extends SubsystemBase {
     //This is for testing/tuning PID values for module rotation
     public Command rotateWheels45DegreesCommand() {
         return runOnce(() -> {
+            wheelRotationPidTesting = true;
             //first call will move to 0 degrees, next to 45, then 90... 
             int desiredAngle = rotationPidRunCount * 45;
             double constrainedAngle = MathUtil.inputModulus(desiredAngle * 1.0, -180.0, 180.0);
             int actualAngle = Double.valueOf(constrainedAngle).intValue();
             DataLogManager.log("RBR: Rotating wheels to " + actualAngle + " degrees");
-            frontLeftModule.lockModule(actualAngle);
-            frontRightModule.lockModule(actualAngle);
-            backLeftModule.lockModule(actualAngle);
-            backRightModule.lockModule(actualAngle);
+            frontLeftModule.setSteerAngleAbsolute(actualAngle);
+            frontRightModule.setSteerAngleAbsolute(actualAngle);
+            backLeftModule.setSteerAngleAbsolute(actualAngle);
+            backRightModule.setSteerAngleAbsolute(actualAngle);
             rotationPidRunCount++;
         });
     }
@@ -376,7 +400,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     private void handleLockedStates() {
-        if (!wheelsLockedX) {
+        if (!wheelsLockedX && !wheelRotationPidTesting) {
             // If we are not in wheel's locked mode, update swerve modules with new states based on chassis speeds
             updateSwerveModules(swerveModuleStates);
         } else if (wheelsLockedX) {
@@ -443,6 +467,14 @@ public class Drivetrain extends SubsystemBase {
 
     public void setVisionSystem(VisionSystem visionSystem) {
         this.visionSystem = visionSystem;
+    }
+
+    public boolean isWheelRotationPidTesting() {
+        return wheelRotationPidTesting;
+    }
+
+    public void setWheelRotationPidTesting(boolean wheelRotationPidTesting) {
+        this.wheelRotationPidTesting = wheelRotationPidTesting;
     }
     
 }
