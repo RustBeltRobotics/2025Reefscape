@@ -260,12 +260,12 @@ public final class Constants {
   public static final class PathPlanner {
     public static final ModuleConfig MODULE_CONFIG = new ModuleConfig(Kinematics.WHEEL_RADIUS, Kinematics.MAX_SWERVE_MODULE_VELOCITY_METERS_PER_SECOND,
       Kinematics.WHEEL_COEFFECIENT_OF_FRICTION, DCMotor.getKrakenX60(1), 6.12, 60.0, 4);
-    public static final RobotConfig ROBOT_CONFIG = new RobotConfig(Constants.Kinematics.LOADED_MASS, Constants.Kinematics.MOMENT_OF_INTERIA,
-      MODULE_CONFIG, Constants.Kinematics.DRIVETRAIN_TRACKWIDTH_METERS);
+    public static final RobotConfig ROBOT_CONFIG = new RobotConfig(Kinematics.LOADED_MASS, Kinematics.MOMENT_OF_INTERIA,
+      MODULE_CONFIG, Kinematics.SWERVE_KINEMATICS.getModules());
       
     //TODO: tune this - max xy error seen roughly 1 - 0.33
     // public static final double rotation_P = 1.5;
-    public static final double rotation_P = 2.5;
+    public static final double rotation_P = 2.0;
     public static final double rotation_I = 0.0;
     public static final double rotation_D = 0.0;
 

@@ -24,6 +24,7 @@ import java.util.function.DoubleSupplier;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathfindingCommand;
+import com.pathplanner.lib.events.EventTrigger;
 
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -98,17 +99,24 @@ public class RobotContainer {
   private void registerPathPlannerNamedCommands() {
     //TODO: When removing PP named commands, paths or autos - make sure you clean the deploy folder on the Rio!
     // See https://www.chiefdelphi.com/t/pathplanner-autochooser-remembers-deleted-autos/455940/5
+    Command tiltOutCommand = elevatorTiltMechanism.tiltOutCommand();
+    Command tiltInCommand = elevatorTiltMechanism.tiltInCommand();
     Command intakeCommand = rejector.getIntakeCommand().withTimeout(1.0);
     Command outtakeCommand = rejector.getOuttakeCommand().withTimeout(1.0);
     Command elevatorL1Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1);
     Command elevatorHighAlgaeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE);
     Command elevatorL4Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4);
+    NamedCommands.registerCommand("elevator-tilt-out", tiltOutCommand);
+    NamedCommands.registerCommand("elevator-tilt-in", tiltInCommand);
     NamedCommands.registerCommand("coral-outtake", outtakeCommand);
     NamedCommands.registerCommand("algae-intake", outtakeCommand);
     NamedCommands.registerCommand("algae-outtake", intakeCommand);
     NamedCommands.registerCommand("elevator-l1", elevatorL1Command);
     NamedCommands.registerCommand("elevator-high-algae", elevatorHighAlgaeCommand);
     NamedCommands.registerCommand("elevator-l4", elevatorL4Command);
+
+    //when driving away from the reef after obtaining a high algae, lower the elevator
+    new EventTrigger("leaving-high-algae").onTrue(elevatorL1Command);
   }
 
   /**
@@ -133,7 +141,8 @@ public class RobotContainer {
 
     // Pressing X button rotates swerve wheels 45 degrees
     // TODO: remove this, it's only intended for swerve rotation PID tuning/testing!
-    driverController.x().onTrue(drivetrain.rotateWheels45DegreesCommand().withName("RotateWheels45"));
+    driverController.x().whileTrue(drivetrain.rotateWheels45DegreesCommand().withName("RotateWheels45"));
+    driverController.x().onFalse(Commands.runOnce(() -> drivetrain.setWheelRotationPidTesting(false), drivetrain));
 
     // Pressing Down on the D-pad of driver controller will zero/reset vertical motor encoders of the elevator
     driverController.povDown().onTrue(elevator.resetEncodersCommand().withName("ResetElevatorEncoders"));
@@ -238,13 +247,17 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     Command chosenAutoCommand = autoChooser.getSelected();
-    Command elevatorTiltOutCommand = elevatorTiltMechanism.tiltOutCommand().withTimeout(1.0);
-    if (chosenAutoCommand != null) {
-      //Before starting auto, ensure the elevator is tilted out into the vertical position
-      return Commands.sequence(elevatorTiltOutCommand, chosenAutoCommand);
-    } else {
-      return elevatorTiltOutCommand;
-    }
+
+    return chosenAutoCommand;
+    //Note: we can't do this, because the auto command is already a composition/sequence
+    // (an exeption will be thrown)
+    // Command elevatorTiltOutCommand = elevatorTiltMechanism.tiltOutCommand().withTimeout(1.0);
+    // if (chosenAutoCommand != null) {
+    //   //Before starting auto, ensure the elevator is tilted out into the vertical position
+    //   return Commands.sequence(elevatorTiltOutCommand, chosenAutoCommand);
+    // } else {
+    //   return elevatorTiltOutCommand;
+    // }
   }
 
   public void configureAutos() {

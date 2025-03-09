@@ -1,33 +1,21 @@
 2025 TODO:
-    - Test the avoid tipping command logic (Down D-Pad on operator)
-    - Test/Tune Swerve Rotation motor PID values (X button on driver)
-        - Graph using Swerve tab 
-            - /RBR/SwerveStates/Measured
-              /RBR/SwerveStates/Setpoint
-              /RBR/ChassisSpeed/Setpoint
-            - and/or line charts in AdvantageScope
-                - /RBR/Swerve/Rotation/Absolute/FL
-                - /RBR/Swerve/Rotation/Absolute/FR
-                - /RBR/Swerve/Rotation/Absolute/BL
-                - /RBR/Swerve/Rotation/Absolute/BR
-    - Test AprilTag readability from different starting points/angles on robot starting line
-    - Test/verify distance accuracy from AprilTag pipeline output in photonvision UI
-        - measure actual distance from lens to tag using measuring tape, compare to value output by UI
-        - compare close vs. medium vs. far placement
+    - Delete deploy dir on RIO to clear old PP data
+    - Test Rect Rotate Auto to verify low path following error
+    - Test Auto S2 to B to Barge2
+        - If ending barge position looks safe, add commands to raise elevator to barge and outtake algae 
+    - Test S1 to BL to Barge1
+        - If ending barge position looks safe, add commands to raise elevator to barge and outtake algae 
+    - Test Auto S3 to BR to P
+        - If algae-outtake at processor doesn't score, try parallel sequence of: elevator-tilt-out, algae-outtake
+    - Ensure autos do not finish with robot on starting line
+
     - Test LED Subsystem (L/R bumpers on driver)
     - Remove / re-set camera stream widget(s) in dashboards
-    - Tune the CollisionDetector / Constants.Kinematics.COLLISION_THRESHOLD_DELTA_G value for tele-op
-        - Graph /RBR/Gyro/Acceleration/X and /RBR/Gyro/Acceleration/Y values while driving
     - Create dashboard in Elastic with following widgets:
-        - Gyro
-        - Alerts
         - Field
         - Swerve 
-        - Auto-chooser
-        - Voltage view
         - Command Scheduler
-        - Match Time
-        - Total Current draw (text box or radial gauge)
+        - Total Current draw (graph)
     - Perform test driving runs to calculate std deviations for wheel odometry and vision for pose estimator (ensure finish pose has a AprilTag visible by vision)
         1. Drive straight a set distance, measure starting robot pose vs. finish robot pose
         2. Drive sideways (stafe straight) a set distance, measure starting robot pose vs. finish robot pose
