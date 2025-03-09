@@ -20,7 +20,7 @@ public class Climber extends SubsystemBase {
     private DoublePublisher climberCurrentPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Climber/Current").publish();
 
     public Climber() {
-        climberMotor = new SparkMax(Constants.CanID.CLIMBER_MOTOR, MotorType.kBrushed);
+        climberMotor = new SparkMax(Constants.CanID.CLIMBER_MOTOR, MotorType.kBrushless);
         SparkMaxConfig climbermotorConfig = getMotorConfig(IdleMode.kBrake);
         climberMotor.configure(climbermotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     }
