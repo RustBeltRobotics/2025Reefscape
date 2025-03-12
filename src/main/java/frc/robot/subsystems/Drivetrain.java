@@ -75,6 +75,7 @@ public class Drivetrain extends SubsystemBase {
     private boolean rollTipDetected = false;
     private boolean wheelRotationPidTesting = false;
     private boolean wheelsLockedX = false; // Boolean statement to control locking the wheels in an X-position
+    private boolean shouldUseVision = false;
 
     private final SwerveDriveOdometry swerveOdometry;
     private final SwerveDrivePoseEstimator poseEstimator;
@@ -256,21 +257,20 @@ public class Drivetrain extends SubsystemBase {
         poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), pose);
         resetPoseEstimateUsingVision();
     }
-
     public Command resetPoseUsingVisionCommand() {
         return runOnce(() -> resetPoseEstimateUsingVision());
     }
 
     //will return true if pose was able to be reset using vision system
     public boolean resetPoseEstimateUsingVision() {
-        if (Constants.Vision.VISION_ENABLED) {
+        if (shouldUseVision) {
             boolean poseReset = false;
             //This will force initial robot pose using vision system - overriding the initial pose set by PathPlanner auto
             List<VisionPoseEstimationResult> potentialPoses = visionSystem.getRobotPoseEstimationResults();
             for (VisionPoseEstimationResult poseEstimationResult : potentialPoses) {
                 if (!poseReset) {
                     Pose2d estimatedRobotPose = poseEstimationResult.getEstimatedRobotPose().estimatedPose.toPose2d();
-                    odometryDebugAlert.setText("RBR: resetPoseUsingVision - pose angle degrees = " + estimatedRobotPose.getRotation().getDegrees());
+                    odometryDebugAlert.setText("RBR: resetPoseUsingVision - pose angle degrees = " + estimatedRobotPose.getRotation().getDegrees() + ", isAutonomous(): " + DriverStation.isAutonomous());
                     poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
                     swerveOdometry.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
                     visionResetPoseEstimatePublisher.set(estimatedRobotPose);
@@ -321,15 +321,15 @@ public class Drivetrain extends SubsystemBase {
         poseEstimator.update(currentRobotRotation, currentModulePositions);
 
         if (collisionDetector.isCollisionDetected() && collisionDetector.isStabilized()) {
-            boolean validPostFromVision = resetPoseEstimateUsingVision();
-            if (validPostFromVision) {
+            boolean validPoseFromVision = resetPoseEstimateUsingVision();
+            if (validPoseFromVision) {
                 collisionDetector.clearDetectedCollision();
             }
         }
 
         collisionDetector.checkForCollision();
 
-        if (Constants.Vision.VISION_ENABLED) {
+        if (shouldUseVision) {
             List<VisionPoseEstimationResult> visionPoseEstimationResults = visionSystem.getRobotPoseEstimationResults();
             //TODO: review cases where we get multiple valid estimates back to determine if we should apply further filtering here to drop potential bad results
             for (VisionPoseEstimationResult visionPoseEstimationResult : visionPoseEstimationResults) {
@@ -474,6 +474,10 @@ public class Drivetrain extends SubsystemBase {
 
     public void setWheelRotationPidTesting(boolean wheelRotationPidTesting) {
         this.wheelRotationPidTesting = wheelRotationPidTesting;
+    }
+
+    public void setShouldUseVision(boolean shouldUseVision) {
+        this.shouldUseVision = shouldUseVision;
     }
     
 }
