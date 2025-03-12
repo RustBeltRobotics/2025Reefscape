@@ -3,35 +3,42 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.16875,
-        "y": 4.0055
+        "x": 5.475909598999466,
+        "y": 2.277901040318726
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.8275,
-        "y": 1.061
+        "x": 5.911273434908628,
+        "y": 1.3007510975003869
       },
       "isLocked": false,
-      "linkedName": "reef-front"
+      "linkedName": "reef-back-right-backoff"
     },
     {
       "anchor": {
         "x": 5.99834620209046,
-        "y": 0.6235184638639146
+        "y": 0.8750620135003169
       },
       "prevControl": {
-        "x": 5.99834620209046,
-        "y": 1.623518463863915
+        "x": 5.785501660090425,
+        "y": 1.3781491127731242
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "processor"
+      "linkedName": "processor-score"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "leaving-high-algae",
+      "waypointRelativePos": 0.0531170521938263,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -48,7 +55,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 121.18499999999999
   },
   "useDefaultConstraints": true
 }

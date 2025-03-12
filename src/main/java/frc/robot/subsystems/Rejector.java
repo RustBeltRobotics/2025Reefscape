@@ -88,6 +88,10 @@ public class Rejector extends SubsystemBase {
         return this.startEnd(() -> runAtPercentage(1.0), () -> stopMotor());
     }
 
+    public Command getOuttakeCommandWithSpeed(double speed) {
+        return this.startEnd(() -> runAtPercentage(speed), () -> stopMotor());
+    }
+
     public Command getIntakeCommand() {
         return this.startEnd(() -> runAtPercentage(-1.0), () -> stopMotor());
     }

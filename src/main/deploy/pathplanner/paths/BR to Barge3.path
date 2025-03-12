@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 7.6527287785452724,
-        "y": 4.803011288591864
+        "y": 4.928783063410065
       },
       "prevControl": {
         "x": 7.798978778545273,
-        "y": 3.603761288591864
+        "y": 3.729533063410065
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,7 +31,14 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "approaching-barge",
+      "waypointRelativePos": 0.553700708614433,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,

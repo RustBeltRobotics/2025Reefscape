@@ -17,34 +17,33 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "coral-outtake"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "elevator-high-algae"
-                }
-              }
-            ]
+            "name": "coral-outtake"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "BR to P"
+            "pathName": "BR to Barge3"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "algae-outtake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevator-l1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Barge3 to Park3"
           }
         }
       ]

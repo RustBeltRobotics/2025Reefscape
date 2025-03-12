@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Blue Straight to Reef Midpoint"
+            "pathName": "Start3 to BR"
           }
         },
         {
@@ -23,15 +23,15 @@
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "B to Barge2"
+            "name": "grab-high-algae"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "algae-outtake"
+            "pathName": "BR Backoff"
           }
         },
         {
@@ -43,7 +43,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Barge2 to Park2"
+            "pathName": "BR Backoff to PScore"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevator-tilt-in"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "algae-outtake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "PScore to P"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevator-tilt-out"
           }
         }
       ]

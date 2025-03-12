@@ -1,0 +1,31 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "elevator-tilt-out"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Start3 to BR"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "coral-outtake"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

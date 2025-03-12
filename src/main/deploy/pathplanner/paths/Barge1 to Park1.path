@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.16875,
-        "y": 4.0055
+        "x": 7.710777289999828,
+        "y": 7.115276994864964
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.8275,
-        "y": 1.061
+        "x": 6.791675858636043,
+        "y": 7.076577987228595
       },
       "isLocked": false,
-      "linkedName": "reef-front"
+      "linkedName": "barge-1"
     },
     {
       "anchor": {
-        "x": 5.99834620209046,
-        "y": 0.6235184638639146
+        "x": 5.9209481868177205,
+        "y": 7.115276994864964
       },
       "prevControl": {
-        "x": 5.99834620209046,
-        "y": 1.623518463863915
+        "x": 6.665904083817839,
+        "y": 7.115276994864964
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "processor"
+      "linkedName": "park-1"
     }
   ],
   "rotationTargets": [],
@@ -34,9 +34,9 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
-    "maxAcceleration": 3.0,
-    "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 720.0,
+    "maxAcceleration": 2.25,
+    "maxAngularVelocity": 360.0,
+    "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },

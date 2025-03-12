@@ -29,6 +29,14 @@ public class Climber extends SubsystemBase {
         return runOnce(() -> climberMotor.configure(getMotorConfig(idleMode), ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters));
     }
 
+    public Command descendCommand() {
+        return startEnd(() -> climb(-0.5), () -> stop());
+    }
+
+    public Command climbCommand() {
+        return startEnd(() -> climb(1.0), () -> stop());
+    }
+
     private SparkMaxConfig getMotorConfig(IdleMode idleMode) {
         SparkMaxConfig climbermotorConfig = new SparkMaxConfig();
         climbermotorConfig.inverted(false).idleMode(idleMode);

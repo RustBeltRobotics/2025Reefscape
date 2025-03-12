@@ -57,7 +57,7 @@ public class Robot extends TimedRobot {
     DriverStation.startDataLog(DataLogManager.getLog());
 
     // Log Phoenix / CTRE device signals (this code is only necessary outside of competition)
-    SignalLogger.setPath("/media/sda1/logs/");
+    // SignalLogger.setPath("/media/sdb1/logs/");
     SignalLogger.start();
 
     // Log Rev device signals (see https://github.com/Mechanical-Advantage/AdvantageScope/blob/main/docs/REV-LOGGING.md)
@@ -114,6 +114,8 @@ public class Robot extends TimedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    //If enabled in constants, use vision readings in auto to update odometry / pose estimate
+    robotContainer.getDrivetrain().setShouldUseVision(Constants.Vision.VISION_ENABLED);
     autonomousCommand = robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
@@ -135,6 +137,9 @@ public class Robot extends TimedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+
+    //Do not use vision / AprilTag readings to update odometry during tele-op
+    robotContainer.getDrivetrain().setShouldUseVision(false);
   }
 
   /** This function is called periodically during operator control. */

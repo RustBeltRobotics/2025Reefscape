@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 7.672078282363458,
-        "y": 7.13462649868315
+        "x": 7.710777289999828,
+        "y": 7.115276994864964
       },
       "prevControl": {
-        "x": 6.501433301363269,
-        "y": 6.8250344375921905
+        "x": 6.540132308999639,
+        "y": 6.805684933774005
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "leaving-high-algae",
-      "waypointRelativePos": 0.0549849016580862,
+      "name": "approaching-barge",
+      "waypointRelativePos": 0.3968013536169257,
       "endWaypointRelativePos": null,
       "command": null
     }

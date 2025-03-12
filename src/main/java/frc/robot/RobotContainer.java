@@ -101,22 +101,29 @@ public class RobotContainer {
     // See https://www.chiefdelphi.com/t/pathplanner-autochooser-remembers-deleted-autos/455940/5
     Command tiltOutCommand = elevatorTiltMechanism.tiltOutCommand();
     Command tiltInCommand = elevatorTiltMechanism.tiltInCommand();
-    Command intakeCommand = rejector.getIntakeCommand().withTimeout(1.0);
-    Command outtakeCommand = rejector.getOuttakeCommand().withTimeout(1.0);
-    Command elevatorL1Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1);
-    Command elevatorHighAlgaeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE);
-    Command elevatorL4Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4);
+    Command elevatorL1Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(1.0);
+    Command elevatorHighAlgaeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE).withTimeout(2.5);
+    Command elevatorL4Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4).withTimeout(1.5);
+    Command elevatorBargeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.BARGE).withTimeout(1.5);
+    Command doNothingCommand = Commands.none();
     NamedCommands.registerCommand("elevator-tilt-out", tiltOutCommand);
     NamedCommands.registerCommand("elevator-tilt-in", tiltInCommand);
-    NamedCommands.registerCommand("coral-outtake", outtakeCommand);
-    NamedCommands.registerCommand("algae-intake", outtakeCommand);
-    NamedCommands.registerCommand("algae-outtake", intakeCommand);
+    NamedCommands.registerCommand("coral-outtake", rejector.getOuttakeCommandWithSpeed(0.6).withTimeout(1.0));
+    NamedCommands.registerCommand("algae-intake", rejector.getOuttakeCommand().withTimeout(2.5));
+    NamedCommands.registerCommand("algae-outtake", rejector.getIntakeCommand().withTimeout(1.5));
     NamedCommands.registerCommand("elevator-l1", elevatorL1Command);
     NamedCommands.registerCommand("elevator-high-algae", elevatorHighAlgaeCommand);
     NamedCommands.registerCommand("elevator-l4", elevatorL4Command);
-
+    NamedCommands.registerCommand("elevator-barge", elevatorBargeCommand);
+    NamedCommands.registerCommand("grab-high-algae", Commands.race(rejector.getOuttakeCommand().withTimeout(2.5), elevatorHighAlgaeCommand));
     //when driving away from the reef after obtaining a high algae, lower the elevator
-    new EventTrigger("leaving-high-algae").onTrue(elevatorL1Command);
+    // new EventTrigger("leaving-high-algae").onTrue(elevatorL1Command);
+
+    //TODO: uncomment this after testing barge auto stop position can safety raise elevator without striking barge
+    // new EventTrigger("approaching-barge").onTrue(elevatorBargeCommand);
+
+    //TODO: comment this out after determining we can safeuly raise elevator to barge height and uncommenting above trigger
+    new EventTrigger("approaching-barge").onTrue(doNothingCommand);
   }
 
   /**
@@ -144,6 +151,8 @@ public class RobotContainer {
     driverController.x().whileTrue(drivetrain.rotateWheels45DegreesCommand().withName("RotateWheels45"));
     driverController.x().onFalse(Commands.runOnce(() -> drivetrain.setWheelRotationPidTesting(false), drivetrain));
 
+    driverController.povUp().whileTrue(climber.climbCommand());
+    driverController.back().whileTrue(climber.descendCommand());
     // Pressing Down on the D-pad of driver controller will zero/reset vertical motor encoders of the elevator
     driverController.povDown().onTrue(elevator.resetEncodersCommand().withName("ResetElevatorEncoders"));
 
@@ -187,6 +196,7 @@ public class RobotContainer {
     operatorController.povRight().onTrue(elevatorTiltMechanism.tiltOutCommand().withName("TiltIn"));
     //Pressing Start button moves the coral out slightly to make reef alignment easier
     operatorController.start().onTrue(rejector.getOuttakeCommand().withTimeout(0.05).withName("CoralEdge"));
+    operatorController.back().whileTrue(climber.descendCommand());
 
     //TODO: Add explicit elevator tiltOut prior to raising elevator / after lowering elevator
 
@@ -262,6 +272,10 @@ public class RobotContainer {
 
   public void configureAutos() {
     Constants.Shuffleboard.COMPETITION_TAB.add("Auto Selector", autoChooser).withPosition(0, 0).withSize(2, 1);
+  }
+
+  public Drivetrain getDrivetrain() {
+    return drivetrain;
   }
 
   public void rumbleControllers(boolean rumble, boolean rumbleLeft, boolean rumbleRight) {

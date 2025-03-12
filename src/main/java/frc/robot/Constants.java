@@ -50,6 +50,14 @@ public final class Constants {
     public static final int LED_PORT = 9;
   }
 
+  public static final class Game {
+    //These are buffers to accomodate for margin of error
+    public static final double FIELD_POSE_XY_ERROR_MARGIN_METERS = Units.inchesToMeters(1.0);
+    public static final double FIELD_POSE_THETA_ERROR_MARGIN_RADIANS = Units.degreesToRadians(2.0);
+    //Note: this should be set to false for testing the the RBR Lab
+    public static final boolean IS_COMPETITION = true;
+  }
+
   /**
    * CAN bus IDs
    */
@@ -196,7 +204,7 @@ public final class Constants {
 
     /* Change in linear acceleration greater than this value will trigger collision detected */
     public static final double COLLISION_THRESHOLD_DELTA_G_TELE_OP = 1.6;  //TODO: verify this value for tele-op using advantagescope gyro graph
-    public static final double COLLISION_THRESHOLD_DELTA_G_AUTONOMOUS = 0.9;
+    public static final double COLLISION_THRESHOLD_DELTA_G_AUTONOMOUS = 1.4;
     /* Pose estimate should not be reset until after this long after collision */
     public static final long MICROSECONDS_SINCE_COLLISION_THRESHOLD = 250000;  //0.25 seconds
 
@@ -233,12 +241,29 @@ public final class Constants {
 
     public static final double kTiltGearing = 75.0;  //reduction
 
-    public static final double POSITION_L1 = Units.inchesToMeters(0.0);
-    public static final double POSITION_L2 = Units.inchesToMeters(4.0);
-    public static final double POSITION_HIGH_ALGAE = Units.inchesToMeters(15.0);
-    public static final double POSITION_L3 = Units.inchesToMeters(20.0);
-    public static final double POSITION_L4 = Units.inchesToMeters(46.5); //was 48
-    public static final double POSITION_BARGE = Units.inchesToMeters(54.0);
+    //Elevator height setpoints for running in the RBR lab
+    public static final double LAB_POSITION_L1 = Units.inchesToMeters(0.0);
+    public static final double LAB_POSITION_L2 = Units.inchesToMeters(4.0);
+    public static final double LAB_POSITION_HIGH_ALGAE = Units.inchesToMeters(15.0);
+    public static final double LAB_POSITION_L3 = Units.inchesToMeters(20.0);
+    public static final double LAB_POSITION_L4 = Units.inchesToMeters(46.5); //was 48
+    public static final double LAB_POSITION_BARGE = Units.inchesToMeters(54.0);
+
+    //Elevator height setpoints for running on competition field
+    public static final double COMPETITION_POSITION_L1 = Units.inchesToMeters(0.0);
+    public static final double COMPETITION_POSITION_L2 = Units.inchesToMeters(4.0);
+    public static final double COMPETITION_POSITION_HIGH_ALGAE = Units.inchesToMeters(15.0);
+    public static final double COMPETITION_POSITION_L3 = Units.inchesToMeters(20.0);
+    public static final double COMPETITION_POSITION_L4 = Units.inchesToMeters(46.5); //was 48
+    public static final double COMPETITION_POSITION_BARGE = Units.inchesToMeters(54.0);
+
+    //Effective elevator height setpoints - will use competition values if Game.IS_COMPETITION is true, RBR lab values otherwise
+    public static final double POSITION_L1 = Game.IS_COMPETITION ? COMPETITION_POSITION_L1 : LAB_POSITION_L1;
+    public static final double POSITION_L2 = Game.IS_COMPETITION ? COMPETITION_POSITION_L2 : LAB_POSITION_L2;
+    public static final double POSITION_HIGH_ALGAE = Game.IS_COMPETITION ? COMPETITION_POSITION_HIGH_ALGAE : LAB_POSITION_HIGH_ALGAE;
+    public static final double POSITION_L3 = Game.IS_COMPETITION ? COMPETITION_POSITION_L3 : LAB_POSITION_L3;
+    public static final double POSITION_L4 = Game.IS_COMPETITION ? COMPETITION_POSITION_L4 : LAB_POSITION_L4;
+    public static final double POSITION_BARGE = Game.IS_COMPETITION ? COMPETITION_POSITION_BARGE : LAB_POSITION_BARGE;
 
     //tolerable error distance in meters (i.e. is the current height close enough to the goal?)
     public static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(1.0);
@@ -300,9 +325,9 @@ public final class Constants {
      * See also https://www.chiefdelphi.com/t/how-do-i-understand-standard-deviation-in-the-poseestimator-class/411492/10?u=mrokitka
      */
     public static final Matrix<N3, N1> DEFAULT_VISION_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.9, 0.9, 0.9);
-    public static final Matrix<N3, N1> SINGLE_TAG_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.6, 0.6, Units.degreesToRadians(20));
-    public static final double MULTI_TAG_XY_PER_TAG_STANDARD_DEVIATION = 0.15;
-    public static final double MULTI_TAG_THETA_STANDARD_DEVIATION = Units.degreesToRadians(10);
+    public static final Matrix<N3, N1> SINGLE_TAG_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.8, 0.8, Units.degreesToRadians(30));
+    public static final double MULTI_TAG_XY_PER_TAG_STANDARD_DEVIATION = 0.3;
+    public static final double MULTI_TAG_THETA_STANDARD_DEVIATION = Units.degreesToRadians(20);
     
     /**
      * Unique camera names, usable in PhotonCamera instances
@@ -339,12 +364,6 @@ public final class Constants {
       public static final Transform3d BACK_LEFT = new Transform3d(Units.inchesToMeters(9.5), Units.inchesToMeters(9.0), Units.inchesToMeters(11.0),
         new Rotation3d(0, 0, 0).rotateBy(new Rotation3d(0, 0, Units.degreesToRadians(90))));  //back left - photonvision2
     }
-  }
-
-  public static final class Game {
-    //These are buffers to accomodate for margin of error
-    public static final double FIELD_POSE_XY_ERROR_MARGIN_METERS = Units.inchesToMeters(1.0);
-    public static final double FIELD_POSE_THETA_ERROR_MARGIN_RADIANS = Units.degreesToRadians(2.0);
   }
 
   public static final class Shuffleboard {

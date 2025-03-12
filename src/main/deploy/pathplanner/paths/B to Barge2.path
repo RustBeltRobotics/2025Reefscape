@@ -8,20 +8,36 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.059000000000001,
-        "y": 6.08225
+        "x": 7.5269570037270705,
+        "y": 4.0580553915917426
       },
       "isLocked": false,
       "linkedName": "reef-back"
     },
     {
       "anchor": {
-        "x": 7.6527287785452724,
-        "y": 6.070403788682977
+        "x": 6.791675858636043,
+        "y": 4.290249437409962
       },
       "prevControl": {
-        "x": 6.907772881545154,
-        "y": 5.122278101591915
+        "x": 6.540132308999637,
+        "y": 3.961307872500818
+      },
+      "nextControl": {
+        "x": 7.0273694346269835,
+        "y": 4.598464113705805
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.6914277861816425,
+        "y": 6.089753292501163
+      },
+      "prevControl": {
+        "x": 6.83037430204975,
+        "y": 5.770488001196662
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,7 +47,14 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "approaching-barge",
+      "waypointRelativePos": 1.3,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,

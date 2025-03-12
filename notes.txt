@@ -1,6 +1,4 @@
 2025 TODO:
-    - Delete deploy dir on RIO to clear old PP data
-    - Test Rect Rotate Auto to verify low path following error
     - Test Auto S2 to B to Barge2
         - If ending barge position looks safe, add commands to raise elevator to barge and outtake algae 
     - Test S1 to BL to Barge1

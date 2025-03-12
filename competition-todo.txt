@@ -1,0 +1,3 @@
+- Test/update height setpoints for L2, L3, High Algae, L4
+- Test barge autos on test field to determine if raising elevator to barge height is safe
+    - See eventTriggers in registerPathPlannerNamedCommands()

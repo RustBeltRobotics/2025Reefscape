@@ -21,30 +21,6 @@
           "data": {
             "name": "coral-outtake"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "B to Barge2"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "algae-outtake"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "elevator-l1"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Barge2 to Park2"
-          }
         }
       ]
     }
