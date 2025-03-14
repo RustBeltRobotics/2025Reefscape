@@ -251,11 +251,11 @@ public final class Constants {
 
     //Elevator height setpoints for running on competition field
     public static final double COMPETITION_POSITION_L1 = Units.inchesToMeters(0.0);
-    public static final double COMPETITION_POSITION_L2 = Units.inchesToMeters(4.0);
+    public static final double COMPETITION_POSITION_L2 = Units.inchesToMeters(5.0);
     public static final double COMPETITION_POSITION_HIGH_ALGAE = Units.inchesToMeters(15.0);
-    public static final double COMPETITION_POSITION_L3 = Units.inchesToMeters(20.0);
-    public static final double COMPETITION_POSITION_L4 = Units.inchesToMeters(46.5); //was 48
-    public static final double COMPETITION_POSITION_BARGE = Units.inchesToMeters(54.0);
+    public static final double COMPETITION_POSITION_L3 = Units.inchesToMeters(20.5);
+    public static final double COMPETITION_POSITION_L4 = Units.inchesToMeters(45.5); //was 48
+    public static final double COMPETITION_POSITION_BARGE = Units.inchesToMeters(56.0);
 
     //Effective elevator height setpoints - will use competition values if Game.IS_COMPETITION is true, RBR lab values otherwise
     public static final double POSITION_L1 = Game.IS_COMPETITION ? COMPETITION_POSITION_L1 : LAB_POSITION_L1;
@@ -266,7 +266,7 @@ public final class Constants {
     public static final double POSITION_BARGE = Game.IS_COMPETITION ? COMPETITION_POSITION_BARGE : LAB_POSITION_BARGE;
 
     //tolerable error distance in meters (i.e. is the current height close enough to the goal?)
-    public static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(1.0);
+    public static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(0.25);
 
     //percentage at which to run the tilt motor
     public static final double TILT_MOTOR_IN_SPEED = 0.4;
@@ -315,7 +315,9 @@ public final class Constants {
     public static final int TAG_PRESENCE_WEIGHT = 10;
     //TODO: Update this for competition to use PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR
     // April tag posiitions in our lab are not in accurate enough positions to use multi-tag strategy
-    public static final PoseStrategy POSE_STRATEGY = PoseStrategy.LOWEST_AMBIGUITY;
+    public static final PoseStrategy POSE_STRATEGY_LAB = PoseStrategy.LOWEST_AMBIGUITY;
+    public static final PoseStrategy POSE_STRATEGY_COMP = PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR;
+    public static final PoseStrategy POSE_STRATEGY = Game.IS_COMPETITION ? POSE_STRATEGY_COMP : POSE_STRATEGY_LAB;
 
     /**
      * Standard deviations for vision measurements. Increase these numbers to trust your
@@ -352,7 +354,7 @@ public final class Constants {
       //example - https://github.com/Mechanical-Advantage/RobotCode2024/blob/main/src/main/java/org/littletonrobotics/frc2024/subsystems/apriltagvision/AprilTagVisionConstants.java#L30
       //x+, y+, z+, (0, -degrees, 0).rotateBy(0, 0, 45 degrees)
 
-      public static final Transform3d FRONT_CENTER = new Transform3d(Units.inchesToMeters(14.0), 0.0, Units.inchesToMeters(16.0), 
+      public static final Transform3d FRONT_CENTER = new Transform3d(Units.inchesToMeters(14.0), 0.0, Units.inchesToMeters(11.5), 
         new Rotation3d(0, 0, 0));  //front center - photonvision1
       //x+, y-, z+, (0, -degrees, 0).rotateBy(0, 0, -45 degrees)
       // public static final Transform3d FRONT_RIGHT = new Transform3d(CAM_XY_FROM_CENTER_OF_ROBOT, -CAM_XY_FROM_CENTER_OF_ROBOT, CAM_Z_FROM_FLOOR, 
