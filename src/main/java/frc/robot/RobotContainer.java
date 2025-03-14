@@ -7,8 +7,10 @@ package frc.robot;
 import frc.robot.commands.DefaultClimbCommand;
 import frc.robot.commands.DefaultLedCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
+import frc.robot.commands.ReefAutoAlignCommand;
 import frc.robot.commands.RobotOrientedDriveCommand;
 import frc.robot.model.ElevatorVerticalPosition;
+import frc.robot.model.RejectorSide;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
@@ -24,7 +26,6 @@ import java.util.function.DoubleSupplier;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathfindingCommand;
-import com.pathplanner.lib.events.EventTrigger;
 
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -99,7 +100,7 @@ public class RobotContainer {
   private void registerPathPlannerNamedCommands() {
     //TODO: When removing PP named commands, paths or autos - make sure you clean the deploy folder on the Rio!
     // See https://www.chiefdelphi.com/t/pathplanner-autochooser-remembers-deleted-autos/455940/5
-    Command tiltOutCommand = elevatorTiltMechanism.tiltOutCommand();
+    Command tiltOutCommand = elevatorTiltMechanism.tiltOutCommand().andThen(elevator.resetEncodersCommand());
     Command tiltInCommand = elevatorTiltMechanism.tiltInCommand();
     Command elevatorL1Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(1.0);
     Command elevatorHighAlgaeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE).withTimeout(2.5);
@@ -108,13 +109,15 @@ public class RobotContainer {
     Command doNothingCommand = Commands.none();
     NamedCommands.registerCommand("elevator-tilt-out", tiltOutCommand);
     NamedCommands.registerCommand("elevator-tilt-in", tiltInCommand);
-    NamedCommands.registerCommand("coral-outtake", rejector.getOuttakeCommandWithSpeed(0.6).withTimeout(1.0));
+    NamedCommands.registerCommand("coral-outtake", rejector.getOuttakeCommandWithSpeed(0.5).withTimeout(1.0));
     NamedCommands.registerCommand("algae-intake", rejector.getOuttakeCommand().withTimeout(2.5));
     NamedCommands.registerCommand("algae-outtake", rejector.getIntakeCommand().withTimeout(1.5));
     NamedCommands.registerCommand("elevator-l1", elevatorL1Command);
     NamedCommands.registerCommand("elevator-high-algae", elevatorHighAlgaeCommand);
     NamedCommands.registerCommand("elevator-l4", elevatorL4Command);
     NamedCommands.registerCommand("elevator-barge", elevatorBargeCommand);
+    NamedCommands.registerCommand("elevator-barge-wait", Commands.waitSeconds(3.5));
+    NamedCommands.registerCommand("coral-station-wait", Commands.waitSeconds(2.0));
     NamedCommands.registerCommand("grab-high-algae", Commands.race(rejector.getOuttakeCommand().withTimeout(2.5), elevatorHighAlgaeCommand));
     //when driving away from the reef after obtaining a high algae, lower the elevator
     // new EventTrigger("leaving-high-algae").onTrue(elevatorL1Command);
@@ -123,7 +126,7 @@ public class RobotContainer {
     // new EventTrigger("approaching-barge").onTrue(elevatorBargeCommand);
 
     //TODO: comment this out after determining we can safeuly raise elevator to barge height and uncommenting above trigger
-    new EventTrigger("approaching-barge").onTrue(doNothingCommand);
+    // new EventTrigger("approaching-barge").onTrue(doNothingCommand);
   }
 
   /**
@@ -146,6 +149,9 @@ public class RobotContainer {
     RobotOrientedDriveCommand robotOrientedDriveCommand = new RobotOrientedDriveCommand(drivetrain, driverTranslationXSupplier, driverTranslationYSupplier, driverRotationSupplier);
     driverController.leftTrigger().whileTrue(robotOrientedDriveCommand);
 
+    //Start button forces elevator to bottom and then resets controllersutttfvvv6
+    driverController.start().onTrue(elevator.elevatorForceL1AndResetEncodersCommand());
+
     // Pressing X button rotates swerve wheels 45 degrees
     // TODO: remove this, it's only intended for swerve rotation PID tuning/testing!
     driverController.x().whileTrue(drivetrain.rotateWheels45DegreesCommand().withName("RotateWheels45"));
@@ -157,8 +163,12 @@ public class RobotContainer {
     driverController.povDown().onTrue(elevator.resetEncodersCommand().withName("ResetElevatorEncoders"));
 
     //Test color LEDs when driver bumpers are held
-    driverController.leftBumper().whileTrue(led.setLedColorCommand(Color.kRed).withName("LedColorRed"));
-    driverController.rightBumper().whileTrue(led.setLedColorCommand(Color.kBlue).withName("LedColorBlue"));
+    // driverController.leftBumper().whileTrue(led.setLedColorCommand(Color.kRed).withName("LedColorRed"));
+    // driverController.rightBumper().whileTrue(led.setLedColorCommand(Color.kBlue).withName("LedColorBlue"));
+
+    //Auto-align for coral scoring when up against the reef: L bumper = score L rejector, R bumper = score R rejector
+    driverController.leftBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.LEFT).withName("AutoAlignLeft"));
+    driverController.rightBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.RIGHT).withName("AutoAlignRight"));
 
     //TODO: on detection of right distance sensor, light up right side LED one color
     //TODO: on detection of left distance sensor, light up left side LED one color
