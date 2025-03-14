@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.43325,
-        "y": 7.17425
+        "x": 1.4028390452715336,
+        "y": 7.163650754410427
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.14925,
-        "y": 5.838500000000001
+        "x": 3.1188390452715335,
+        "y": 5.827900754410428
       },
       "isLocked": false,
       "linkedName": "c-station-left"
     },
     {
       "anchor": {
-        "x": 3.783,
-        "y": 5.18525
+        "x": 3.831201774453745,
+        "y": 5.151302357319192
       },
       "prevControl": {
-        "x": 1.9694999999999991,
-        "y": 6.49175
+        "x": 2.017701774453745,
+        "y": 6.457802357319192
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 35.67640822186202
+    "rotation": 125.67640822186205
   },
   "useDefaultConstraints": true
 }

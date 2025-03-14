@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Blue Straight to Reef Midpoint"
+            "pathName": "Start3 to BR"
           }
         },
         {
@@ -25,37 +25,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "B to Barge2"
+            "pathName": "BR to CStationR"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "elevator-barge-wait"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "elevator-barge"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "algae-outtake"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "elevator-l1"
+            "name": "coral-station-wait"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Barge2 to Park2"
+            "pathName": "CStationR to FR"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "coral-outtake"
           }
         }
       ]
