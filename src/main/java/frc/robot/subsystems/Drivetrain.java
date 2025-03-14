@@ -254,6 +254,7 @@ public class Drivetrain extends SubsystemBase {
 
     public void resetPose(Pose2d pose) {
         odometryDebugAlert.setText("RBR: resetPose - angle degrees = " + pose.getRotation().getDegrees());
+        swerveOdometry.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), pose);
         poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), pose);
         resetPoseEstimateUsingVision();
     }
@@ -271,6 +272,7 @@ public class Drivetrain extends SubsystemBase {
                 if (!poseReset) {
                     Pose2d estimatedRobotPose = poseEstimationResult.getEstimatedRobotPose().estimatedPose.toPose2d();
                     odometryDebugAlert.setText("RBR: resetPoseUsingVision - pose angle degrees = " + estimatedRobotPose.getRotation().getDegrees() + ", isAutonomous(): " + DriverStation.isAutonomous());
+                    DataLogManager.log("RBR: resetPoseUsingVision - pose angle degrees = " + estimatedRobotPose.getRotation().getDegrees() + ", isAutonomous(): " + DriverStation.isAutonomous());
                     poseEstimator.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
                     swerveOdometry.resetPosition(getGyroscopeRotation(), getSwerveModulePositions(), estimatedRobotPose);
                     visionResetPoseEstimatePublisher.set(estimatedRobotPose);
