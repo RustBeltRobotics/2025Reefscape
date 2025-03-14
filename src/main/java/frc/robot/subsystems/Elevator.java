@@ -7,6 +7,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
+import frc.robot.model.ElevatorTiltPosition;
 import frc.robot.model.ElevatorVerticalPosition;
 
 import java.util.EnumMap;
@@ -23,6 +24,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.BooleanPublisher;
@@ -39,6 +42,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -67,6 +71,8 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     private double goalHeightUpperBound = goalHeight + Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
     private double goalHeightLowerBound = goalHeight - Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
     private boolean atGoal; // whether we have reached the desired height yet or not
+    private boolean stallDetected;
+    private Debouncer stallDetectionDebouncer = new Debouncer(0.5, DebounceType.kRising);
     private ElevatorVerticalPosition desiredVerticalPosition;
 
     private final BooleanSupplier atGoalSupplier;
@@ -199,6 +205,8 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
         currentHeight = getHeight();
 
+        stallDetected = stallDetectionDebouncer.calculate(leftMotorOutputCurrentAmps > 35);
+
         currentHeightPublisher.set(currentHeight);
         goalHeightPublisher.set(goalHeight);
         goalHeightUpperPublisher.set(goalHeightUpperBound);
@@ -254,6 +262,22 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
     public Command elevatorBottomCommand() {
         return getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).until(() -> atGoal);
+    }
+
+    public Command elevatorForceL1AndResetEncodersCommand() {
+        return this.run(() -> {
+            this.desiredVerticalPosition = ElevatorVerticalPosition.L1;
+            runVerticalSpeed(-0.45);  //this speed is just a guess
+        }).until(
+            () -> stallDetected
+        ).andThen(
+            () -> {
+                runVerticalSpeed(0.0);
+            }
+        ).andThen(Commands.waitSeconds(0.25))
+        .andThen(
+            () -> resetVerticalElevatorEncoders()
+        );
     }
 
     public Command getSetVerticalGoalCommand(ElevatorVerticalPosition goalPosition) {
