@@ -26,7 +26,7 @@ public class ReefAutoAlignCommand extends Command {
     private final Trigger leftSensorTrigger;
     private final Trigger rightSensorTrigger;
     private final RejectorSide coralScoreSide;
-    private final Pose2d initialOdometryPose;
+    private Pose2d initialOdometryPose;
     private final Alert debugAlert = new Alert("ReefAutoAlign debug", AlertType.kInfo);
 
     public ReefAutoAlignCommand(Drivetrain drivetrain, Rejector rejector, RejectorSide coralScoreSide) {
@@ -35,12 +35,16 @@ public class ReefAutoAlignCommand extends Command {
 
         leftSensorTrigger = rejector.leftLaserSensorActive();
         rightSensorTrigger = rejector.rightLaserSensorActive();
-        initialOdometryPose = drivetrain.getSwerveOdometryPose();
 
         //we're only using the laser sensor triggers, so don't require the rejector as a subsystem requirement for command scheduling
         addRequirements(drivetrain);
 
         debugAlert.set(true);
+    }
+
+    @Override
+    public void initialize() {
+        initialOdometryPose = drivetrain.getSwerveOdometryPose();
     }
 
     /**

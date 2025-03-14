@@ -208,7 +208,8 @@ public final class Constants {
     /* Pose estimate should not be reset until after this long after collision */
     public static final long MICROSECONDS_SINCE_COLLISION_THRESHOLD = 250000;  //0.25 seconds
 
-    public static final Matrix<N3, N1> WHEEL_ODOMETRY_POSE_STANDARD_DEVIATIONS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5));
+    // public static final Matrix<N3, N1> WHEEL_ODOMETRY_POSE_STANDARD_DEVIATIONS = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5));
+    public static final Matrix<N3, N1> WHEEL_ODOMETRY_POSE_STANDARD_DEVIATIONS = VecBuilder.fill(0.1, 0.1, Units.degreesToRadians(5));
   }
 
   public static final class Rejector {
@@ -328,6 +329,8 @@ public final class Constants {
      */
     public static final Matrix<N3, N1> DEFAULT_VISION_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.9, 0.9, 0.9);
     public static final Matrix<N3, N1> SINGLE_TAG_MEASUREMENT_STANDARD_DEVIATIONS = VecBuilder.fill(0.8, 0.8, Units.degreesToRadians(30));
+    public static final Matrix<N3, N1> FRONT_CAMERA_STANDARD_DEVIATIONS = VecBuilder.fill(0.85, 0.85, Units.degreesToRadians(20));
+    public static final Matrix<N3, N1> OTHER_CAMERA_STANDARD_DEVIATIONS = VecBuilder.fill(1.2, 1.2, Units.degreesToRadians(30));
     public static final double MULTI_TAG_XY_PER_TAG_STANDARD_DEVIATION = 0.3;
     public static final double MULTI_TAG_THETA_STANDARD_DEVIATION = Units.degreesToRadians(20);
     

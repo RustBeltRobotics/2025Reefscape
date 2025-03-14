@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.hardware.PowerManagement;
+import frc.robot.model.ElevatorVerticalPosition;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -137,6 +138,8 @@ public class Robot extends TimedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+
+    robotContainer.getElevator().setDesiredVerticalPosition(ElevatorVerticalPosition.L1);
 
     //Do not use vision / AprilTag readings to update odometry during tele-op
     robotContainer.getDrivetrain().setShouldUseVision(false);

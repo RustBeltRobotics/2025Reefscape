@@ -8,43 +8,48 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.51105816763568,
-        "y": 4.0522612793652995
+        "x": 7.256063950272482,
+        "y": 4.08707964731902
       },
       "isLocked": false,
       "linkedName": "reef-back"
     },
     {
       "anchor": {
-        "x": 6.791675858636043,
-        "y": 4.290249437409962
+        "x": 6.714277843363303,
+        "y": 4.628865754228198
       },
       "prevControl": {
-        "x": 6.540132308999637,
-        "y": 3.961307872500818
+        "x": 6.718008771106677,
+        "y": 4.378893595422115
       },
       "nextControl": {
-        "x": 7.0273694346269835,
-        "y": 4.598464113705805
+        "x": 6.694928339545117,
+        "y": 5.925282510046591
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 7.7688258014543825,
+        "x": 7.672078282363458,
         "y": 6.099428044410255
       },
       "prevControl": {
-        "x": 6.90777231732249,
-        "y": 5.780162753105754
+        "x": 6.675578835726934,
+        "y": 6.109102796319347
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "barge-2"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 35.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [

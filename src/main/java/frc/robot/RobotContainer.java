@@ -9,6 +9,7 @@ import frc.robot.commands.DefaultLedCommand;
 import frc.robot.commands.FieldOrientedDriveCommand;
 import frc.robot.commands.ReefAutoAlignCommand;
 import frc.robot.commands.RobotOrientedDriveCommand;
+import frc.robot.commands.StopDrivetrainCommand;
 import frc.robot.model.ElevatorVerticalPosition;
 import frc.robot.model.RejectorSide;
 import frc.robot.subsystems.Climber;
@@ -30,7 +31,6 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -46,7 +46,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
 
   // For limiting maximum speed (1.0 = 100% - full speed)
-  private static double MAX_SPEED_FACTOR = 1.0;
+  private static double MAX_SPEED_FACTOR = 0.8;
 
   private final CommandXboxController driverController = new CommandXboxController(Constants.DriverStation.CONTROLLER_PORT_DRIVER);
   private final CommandXboxController operatorController = new CommandXboxController(Constants.DriverStation.CONTROLLER_PORT_OPERATOR);
@@ -104,20 +104,35 @@ public class RobotContainer {
     Command tiltInCommand = elevatorTiltMechanism.tiltInCommand();
     Command elevatorL1Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(1.0);
     Command elevatorHighAlgaeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE).withTimeout(2.5);
-    Command elevatorL4Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4).withTimeout(1.5);
-    Command elevatorBargeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.BARGE).withTimeout(1.5);
+    Command elevatorL4Command = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4).withTimeout(1.25);
+    Command elevatorBargeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.BARGE).withTimeout(1.35);
+    
+    Command leftSideAutoAlignReefScoreComand = new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.LEFT)
+      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3).withTimeout(0.5))
+      .andThen(rejector.getOuttakeCommand().withTimeout(0.5))
+      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.5))
+      .withName("AutoAlignLeftScore-Auto");
+    Command rightSideAutoAlignReefScoreComand = new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.RIGHT)
+      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3).withTimeout(0.5))
+      .andThen(rejector.getOuttakeCommand().withTimeout(0.5))
+      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.5))
+      .withName("AutoAlignLeftScore-Auto");
     Command doNothingCommand = Commands.none();
+
+    NamedCommands.registerCommand("reef-auto-score-left", leftSideAutoAlignReefScoreComand);
+    NamedCommands.registerCommand("reef-auto-score-right", rightSideAutoAlignReefScoreComand);
+
     NamedCommands.registerCommand("elevator-tilt-out", tiltOutCommand);
     NamedCommands.registerCommand("elevator-tilt-in", tiltInCommand);
-    NamedCommands.registerCommand("coral-outtake", rejector.getOuttakeCommandWithSpeed(0.5).withTimeout(1.0));
+    NamedCommands.registerCommand("coral-outtake", rejector.getElevatorHeightBasedOuttakeCommand(elevator).withTimeout(0.5));
     NamedCommands.registerCommand("algae-intake", rejector.getOuttakeCommand().withTimeout(2.5));
     NamedCommands.registerCommand("algae-outtake", rejector.getIntakeCommand().withTimeout(1.5));
     NamedCommands.registerCommand("elevator-l1", elevatorL1Command);
     NamedCommands.registerCommand("elevator-high-algae", elevatorHighAlgaeCommand);
     NamedCommands.registerCommand("elevator-l4", elevatorL4Command);
     NamedCommands.registerCommand("elevator-barge", elevatorBargeCommand);
-    NamedCommands.registerCommand("elevator-barge-wait", Commands.waitSeconds(3.5));
-    NamedCommands.registerCommand("coral-station-wait", Commands.waitSeconds(2.0));
+    NamedCommands.registerCommand("elevator-barge-wait", Commands.waitSeconds(1.0));
+    NamedCommands.registerCommand("coral-station-wait", Commands.waitSeconds(2.5));
     NamedCommands.registerCommand("grab-high-algae", Commands.race(rejector.getOuttakeCommand().withTimeout(2.5), elevatorHighAlgaeCommand));
     //when driving away from the reef after obtaining a high algae, lower the elevator
     // new EventTrigger("leaving-high-algae").onTrue(elevatorL1Command);
@@ -162,6 +177,11 @@ public class RobotContainer {
     // Pressing Down on the D-pad of driver controller will zero/reset vertical motor encoders of the elevator
     driverController.povDown().onTrue(elevator.resetEncodersCommand().withName("ResetElevatorEncoders"));
 
+    //Stop drivetrain / cancel auto-reef align command when pressing L or R on the driver D-pad
+    StopDrivetrainCommand stopDrivetrainCommand = new StopDrivetrainCommand(drivetrain);
+    driverController.povLeft().onTrue(stopDrivetrainCommand);
+    driverController.povRight().onTrue(stopDrivetrainCommand);
+
     //Test color LEDs when driver bumpers are held
     // driverController.leftBumper().whileTrue(led.setLedColorCommand(Color.kRed).withName("LedColorRed"));
     // driverController.rightBumper().whileTrue(led.setLedColorCommand(Color.kBlue).withName("LedColorBlue"));
@@ -169,6 +189,17 @@ public class RobotContainer {
     //Auto-align for coral scoring when up against the reef: L bumper = score L rejector, R bumper = score R rejector
     driverController.leftBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.LEFT).withName("AutoAlignLeft"));
     driverController.rightBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.RIGHT).withName("AutoAlignRight"));
+
+    // driverController.leftBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.LEFT)
+    //   .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3).withTimeout(0.5))
+    //   .andThen(rejector.getOuttakeCommand().withTimeout(0.5))
+    //   .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.5))
+    //   .withName("AutoAlignLeftScore"));
+    // driverController.rightBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.RIGHT)
+    //   .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3).withTimeout(0.5))
+    //   .andThen(rejector.getOuttakeCommand().withTimeout(0.5))
+    //   .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.5))
+    //   .withName("AutoAlignRightScore"));
 
     //TODO: on detection of right distance sensor, light up right side LED one color
     //TODO: on detection of left distance sensor, light up left side LED one color
@@ -195,7 +226,8 @@ public class RobotContainer {
       .andThen(Commands.waitSeconds(0.5))
       .andThen(elevatorTiltMechanism.tiltOutCommand())
       .withName("AvoidTipping");
-    operatorController.povDown().onTrue(avoidTippingCommand);
+    // operatorController.povDown().onTrue(avoidTippingCommand);
+    operatorController.povDown().whileTrue(rejector.getOuttakeCommandWithSpeed(0.4).withName("L1-Slow-Outtake"));
     //Pressing Right Trigger performs outtake
     operatorController.rightTrigger().whileTrue(rejector.getOuttakeCommand().withName("Outtake"));
     //Pressing Left Trigger performs intake
@@ -301,6 +333,10 @@ public class RobotContainer {
       driver.setRumble(RumbleType.kRightRumble, rumbleValue);
       operator.setRumble(RumbleType.kRightRumble, rumbleValue);
     }
+  }
+
+  public Elevator getElevator() {
+    return elevator;
   }
 
   public static void setMaxSpeedFactor(double newSpeedFactor) {

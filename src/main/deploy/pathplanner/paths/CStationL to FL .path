@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.4028390452715336,
-        "y": 7.163650754410427
+        "x": 1.2673925185442392,
+        "y": 7.09592749104678
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.1188390452715335,
-        "y": 5.827900754410428
+        "x": 2.983392518544239,
+        "y": 5.760177491046781
       },
       "isLocked": false,
       "linkedName": "c-station-left"
@@ -28,7 +28,12 @@
       "linkedName": "reef-front-left"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.40063581182680486,
+      "rotationDegrees": -45.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],

@@ -83,14 +83,14 @@ public class VisionSystem {
             Constants.Vision.CameraPose.FRONT_CENTER, Constants.Vision.POSE_STRATEGY, fieldLayout);   
         // VisionCamera frontRightCamera = new VisionCamera(Constants.Vision.CameraName.FRONT_RIGHT, CameraPosition.FRONT_RIGHT,
         //     Constants.Vision.CameraPose.FRONT_RIGHT, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, fieldLayout);
-        // VisionCamera backRightCamera = new VisionCamera(Constants.Vision.CameraName.BACK_RIGHT, CameraPosition.BACK_RIGHT,
-        //     Constants.Vision.CameraPose.BACK_RIGHT, Constants.Vision.POSE_STRATEGY, fieldLayout);
-        // VisionCamera backLeftCamera = new VisionCamera(Constants.Vision.CameraName.BACK_LEFT, CameraPosition.BACK_LEFT,
-        //     Constants.Vision.CameraPose.BACK_LEFT, Constants.Vision.POSE_STRATEGY, fieldLayout);
+        VisionCamera backRightCamera = new VisionCamera(Constants.Vision.CameraName.BACK_RIGHT, CameraPosition.BACK_RIGHT,
+            Constants.Vision.CameraPose.BACK_RIGHT, Constants.Vision.POSE_STRATEGY, fieldLayout);
+        VisionCamera backLeftCamera = new VisionCamera(Constants.Vision.CameraName.BACK_LEFT, CameraPosition.BACK_LEFT,
+            Constants.Vision.CameraPose.BACK_LEFT, Constants.Vision.POSE_STRATEGY, fieldLayout);
         visionCameras.add(frontCenterCamera);           
         // visionCameras.add(frontRightCamera);           
-        // visionCameras.add(backRightCamera);           
-        // visionCameras.add(backLeftCamera);
+        visionCameras.add(backRightCamera);           
+        visionCameras.add(backLeftCamera);
 
         //Do not track cameras that are not actively connected at time of constructor intiialization
         visionCameras.removeIf(c -> {
@@ -221,7 +221,7 @@ public class VisionSystem {
                 }
 
                 acceptedPoses.add(poseEstimate);
-                estimationResults.add(new VisionPoseEstimationResult(visionCamera, poseEstimate, getVisionMeasurementStandardDeviation(poseEstimate)));
+                estimationResults.add(new VisionPoseEstimationResult(visionCamera, poseEstimate, getVisionMeasurementStandardDeviation(poseEstimate, visionCamera.getCameraPosition())));
 
                 if (visionCamera.getCameraPosition() == CameraPosition.FRONT_CENTER) {
                     frontCenterCameraPosePublisher.set(estimatedPose2d, networkTablesPoseTimestampMicroSeconds);
@@ -238,7 +238,15 @@ public class VisionSystem {
         }
     }
 
-    public Matrix<N3, N1> getVisionMeasurementStandardDeviation(EstimatedRobotPose estimation) {
+    public Matrix<N3, N1> getVisionMeasurementStandardDeviation(EstimatedRobotPose estimation, CameraPosition cameraPosition) {
+        if (cameraPosition == CameraPosition.FRONT_CENTER) {
+            return Constants.Vision.FRONT_CAMERA_STANDARD_DEVIATIONS;
+        } else {
+            return Constants.Vision.OTHER_CAMERA_STANDARD_DEVIATIONS;
+        }
+
+        //Old logic below:
+/*
         double smallestTargetDistance = Double.POSITIVE_INFINITY;  //in meters
         double smallestPoseAmbiguity = Double.POSITIVE_INFINITY;
         int numTargetsUsed = estimation.targetsUsed.size();
@@ -279,6 +287,7 @@ public class VisionSystem {
         }
         
         return VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev);
+*/
     }
 
     public void takeRawImageSnapshot() {

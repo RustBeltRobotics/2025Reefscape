@@ -8,27 +8,32 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.029892785999415,
-        "y": 6.311477109228285
+        "x": 4.1988423469992595,
+        "y": 5.896258254319313
       },
       "isLocked": false,
       "linkedName": "reef-back-left"
     },
     {
       "anchor": {
-        "x": 1.4028390452715336,
-        "y": 7.163650754410427
+        "x": 1.2673925185442392,
+        "y": 7.09592749104678
       },
       "prevControl": {
-        "x": 1.8123390452715338,
-        "y": 5.876650754410427
+        "x": 2.438037499544427,
+        "y": 6.554141384137601
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "c-station-left"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.3909988709399995,
+      "rotationDegrees": 145.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],

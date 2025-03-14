@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.911273434908628,
-        "y": 1.3007510975003869
+        "x": 5.785501660090425,
+        "y": 1.0588822997730756
       },
       "isLocked": false,
       "linkedName": "reef-back-right-backoff"
@@ -20,15 +20,20 @@
         "y": 0.8750620135003169
       },
       "prevControl": {
-        "x": 5.785501660090425,
-        "y": 1.3781491127731242
+        "x": 5.514608606635836,
+        "y": 2.181153521227801
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "processor-score"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.10028448752123062,
+      "rotationDegrees": -75.35544984585394
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [

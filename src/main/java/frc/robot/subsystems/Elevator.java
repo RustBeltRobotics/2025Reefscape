@@ -129,7 +129,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     }
 
     public Elevator() {
-        // TODO: test once fully wired
+        this.desiredVerticalPosition = ElevatorVerticalPosition.L1;
 
         leftMotor = new SparkMax(Constants.CanID.ELEVATOR_LEFT_MOTOR, MotorType.kBrushless);
         SparkMaxConfig leftMotorConfig = getVerticalMotorLeaderConfig(false, Constants.Elevator.kElevatorKp,
@@ -371,6 +371,10 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
     public ElevatorVerticalPosition getDesiredVerticalPosition() {
         return desiredVerticalPosition;
+    }
+
+    public void setDesiredVerticalPosition(ElevatorVerticalPosition desiredVerticalPosition) {
+        this.desiredVerticalPosition = desiredVerticalPosition;
     }
 
     @Override

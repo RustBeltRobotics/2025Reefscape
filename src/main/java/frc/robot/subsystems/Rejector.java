@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.model.ElevatorVerticalPosition;
 
 public class Rejector extends SubsystemBase {
 
@@ -88,6 +89,16 @@ public class Rejector extends SubsystemBase {
 
     public Command getOuttakeCommandWithSpeed(double speed) {
         return this.startEnd(() -> runAtPercentage(speed), () -> stopMotor());
+    }
+
+    public Command getElevatorHeightBasedOuttakeCommand(Elevator elevator) {
+        return this.startEnd(() -> {
+            if (elevator.getDesiredVerticalPosition() == ElevatorVerticalPosition.L1) {
+                runAtPercentage(0.4);
+            } else {
+                runAtPercentage(1.0);
+            }
+        }, () -> stopMotor());
     }
 
     public Command getIntakeCommand() {

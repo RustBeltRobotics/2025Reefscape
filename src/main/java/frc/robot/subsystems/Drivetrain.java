@@ -322,6 +322,7 @@ public class Drivetrain extends SubsystemBase {
         // Update position estimate using odometry from swerve states
         poseEstimator.update(currentRobotRotation, currentModulePositions);
 
+/* 
         if (collisionDetector.isCollisionDetected() && collisionDetector.isStabilized()) {
             boolean validPoseFromVision = resetPoseEstimateUsingVision();
             if (validPoseFromVision) {
@@ -330,7 +331,7 @@ public class Drivetrain extends SubsystemBase {
         }
 
         collisionDetector.checkForCollision();
-
+*/
         if (shouldUseVision) {
             List<VisionPoseEstimationResult> visionPoseEstimationResults = visionSystem.getRobotPoseEstimationResults();
             //TODO: review cases where we get multiple valid estimates back to determine if we should apply further filtering here to drop potential bad results

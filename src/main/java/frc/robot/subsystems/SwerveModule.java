@@ -117,7 +117,7 @@ public class SwerveModule extends SubsystemBase {
         driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = 40;
         driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -40;
 
-        driveConfig.CurrentLimits.StatorCurrentLimit = 120; // 120A stator current limit
+        driveConfig.CurrentLimits.StatorCurrentLimit = 100; // 100A stator current limit
         driveConfig.CurrentLimits.StatorCurrentLimitEnable = true; // Enable stator current limiting
 
         return driveConfig;
