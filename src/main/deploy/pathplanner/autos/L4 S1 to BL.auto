@@ -1,0 +1,55 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "elevator-tilt-out"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L4 S1 to BL"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "reef-auto-score-right"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L4 BL to CStationL"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "coral-station-wait"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L4 CStationL to FL"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "reef-auto-score-right"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

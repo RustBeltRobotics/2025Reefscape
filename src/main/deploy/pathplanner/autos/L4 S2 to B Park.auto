@@ -1,0 +1,49 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "elevator-tilt-out"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L4 S2 to B"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "reef-auto-score-right"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L4 B to B edge"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "algae-intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L4 B Park"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

@@ -16,8 +16,8 @@ import frc.robot.subsystems.Rejector;
 
 public class ReefAutoAlignCommand extends Command {
 
-    //Distance from center of reef to coral arm on either side is approx 7" - if we've traveled 12", we definitely have gone too far
-    private static final double TOTAL_DISTANCE_CUTOFF = Units.inchesToMeters(12.0);
+    //Distance from center of reef to coral arm on either side is approx 7" - if we've traveled 16", we definitely have gone too far
+    private static final double TOTAL_DISTANCE_CUTOFF = Units.inchesToMeters(16.0);
 
     //Speed to move sideways in m/s (12 inches per second)
     private static final double STRAFE_VELOCITY = 0.3048;

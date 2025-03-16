@@ -205,7 +205,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
         currentHeight = getHeight();
 
-        stallDetected = stallDetectionDebouncer.calculate(leftMotorOutputCurrentAmps > 35);
+        stallDetected = stallDetectionDebouncer.calculate(leftMotorOutputCurrentAmps > 20);
 
         currentHeightPublisher.set(currentHeight);
         goalHeightPublisher.set(goalHeight);

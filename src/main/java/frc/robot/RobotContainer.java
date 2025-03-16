@@ -108,15 +108,15 @@ public class RobotContainer {
     Command elevatorBargeCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.BARGE).withTimeout(1.35);
     
     Command leftSideAutoAlignReefScoreComand = new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.LEFT)
-      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3).withTimeout(0.5))
+      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4).withTimeout(1.25))
       .andThen(rejector.getOuttakeCommand().withTimeout(0.5))
-      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.5))
+      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.75))
       .withName("AutoAlignLeftScore-Auto");
     Command rightSideAutoAlignReefScoreComand = new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.RIGHT)
-      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3).withTimeout(0.5))
+      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4).withTimeout(1.25))
       .andThen(rejector.getOuttakeCommand().withTimeout(0.5))
-      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.5))
-      .withName("AutoAlignLeftScore-Auto");
+      .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.75))
+      .withName("AutoAlignRightScore-Auto");
     Command doNothingCommand = Commands.none();
 
     NamedCommands.registerCommand("reef-auto-score-left", leftSideAutoAlignReefScoreComand);
@@ -161,8 +161,18 @@ public class RobotContainer {
     driverController.b().onTrue(drivetrain.resetPoseUsingVisionCommand().withName("ResetPoseUsingVision"));
 
     //Drive in robot oriented mode while the left trigger is held
-    RobotOrientedDriveCommand robotOrientedDriveCommand = new RobotOrientedDriveCommand(drivetrain, driverTranslationXSupplier, driverTranslationYSupplier, driverRotationSupplier);
-    driverController.leftTrigger().whileTrue(robotOrientedDriveCommand);
+    // RobotOrientedDriveCommand robotOrientedDriveCommand = new RobotOrientedDriveCommand(drivetrain, driverTranslationXSupplier, driverTranslationYSupplier, driverRotationSupplier);
+    // driverController.leftTrigger().whileTrue(robotOrientedDriveCommand);
+
+    //while either trigger is help, increase max speed to 100%, otherwise run at default 80% max speed
+    driverController.leftTrigger().whileTrue(Commands.runEnd(
+      () -> RobotContainer.MAX_SPEED_FACTOR = 1.0,
+      () -> RobotContainer.MAX_SPEED_FACTOR = 0.8
+    ));
+    driverController.rightTrigger().whileTrue(Commands.runEnd(
+      () -> RobotContainer.MAX_SPEED_FACTOR = 1.0,
+      () -> RobotContainer.MAX_SPEED_FACTOR = 0.8
+    ));
 
     //Start button forces elevator to bottom and then resets controllersutttfvvv6
     driverController.start().onTrue(elevator.elevatorForceL1AndResetEncodersCommand());
@@ -187,19 +197,11 @@ public class RobotContainer {
     // driverController.rightBumper().whileTrue(led.setLedColorCommand(Color.kBlue).withName("LedColorBlue"));
 
     //Auto-align for coral scoring when up against the reef: L bumper = score L rejector, R bumper = score R rejector
-    driverController.leftBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.LEFT).withName("AutoAlignLeft"));
-    driverController.rightBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.RIGHT).withName("AutoAlignRight"));
+    // driverController.leftBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.LEFT).withName("AutoAlignLeft"));
+    // driverController.rightBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.RIGHT).withName("AutoAlignRight"));
 
-    // driverController.leftBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.LEFT)
-    //   .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3).withTimeout(0.5))
-    //   .andThen(rejector.getOuttakeCommand().withTimeout(0.5))
-    //   .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.5))
-    //   .withName("AutoAlignLeftScore"));
-    // driverController.rightBumper().onTrue(new ReefAutoAlignCommand(drivetrain, rejector, RejectorSide.RIGHT)
-    //   .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3).withTimeout(0.5))
-    //   .andThen(rejector.getOuttakeCommand().withTimeout(0.5))
-    //   .andThen(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withTimeout(0.5))
-    //   .withName("AutoAlignRightScore"));
+    
+    
 
     //TODO: on detection of right distance sensor, light up right side LED one color
     //TODO: on detection of left distance sensor, light up left side LED one color
