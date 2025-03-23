@@ -11,6 +11,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "reset-pose-using-vision"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "L4 S2 to B"
@@ -29,15 +35,22 @@
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "algae-intake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "L4 B Park"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "algae-intake-long"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "L4 B Park"
+                }
+              }
+            ]
           }
         }
       ]

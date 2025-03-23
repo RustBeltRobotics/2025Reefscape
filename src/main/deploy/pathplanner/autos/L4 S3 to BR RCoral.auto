@@ -11,6 +11,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "reset-pose-using-vision"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "L4 S3 to BR"
