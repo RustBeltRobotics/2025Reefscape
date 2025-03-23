@@ -33,7 +33,7 @@ public class ElevatorTiltMechanism extends SubsystemBase {
     private double tiltMotorEncoderVelocity;
 
     private boolean stallDetected;
-    private Debouncer stallDetectionDebouncer = new Debouncer(0.75, DebounceType.kRising);
+    private Debouncer stallDetectionDebouncer = new Debouncer(0.25, DebounceType.kRising);
 
     private BooleanPublisher tiltMotorStallPublisher = NetworkTableInstance.getDefault().getBooleanTopic("/RBR/Elevator/TiltMotor/Stall").publish();
     private DoublePublisher tiltMotorEncoderPositionPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/Elevator/TiltMotor/Position").publish();

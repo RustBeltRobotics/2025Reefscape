@@ -7,8 +7,9 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
-import frc.robot.model.ElevatorTiltPosition;
 import frc.robot.model.ElevatorVerticalPosition;
+import frc.robot.model.MotorRunMode;
+import frc.robot.util.ThresholdValueTimeTracker;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -31,8 +32,10 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
@@ -72,14 +75,21 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     private double goalHeightLowerBound = goalHeight - Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
     private boolean atGoal; // whether we have reached the desired height yet or not
     private boolean stallDetected;
-    private Debouncer stallDetectionDebouncer = new Debouncer(0.5, DebounceType.kRising);
+    private Debouncer stallDetectionDebouncer = new Debouncer(Constants.Elevator.VERTICAL_CURRENT_SPIKE_DEBOUNCE_MIN_SECONDS, DebounceType.kRising);
     private ElevatorVerticalPosition desiredVerticalPosition;
+    private MotorRunMode motorRunMode = MotorRunMode.POSITION_CONTROL;
+    //Track count and duration of times output current exceeds 20 Amps
+    private boolean trackCurrentThreshold;
+    private ThresholdValueTimeTracker outputCurrentThresholdTracker = new ThresholdValueTimeTracker(20.0);
+    private final Alert debugAlert = new Alert("Elevator current tracking debug", AlertType.kInfo);
 
     private final BooleanSupplier atGoalSupplier;
     private final Trigger readyToEjectCoral;
 
     private BooleanPublisher atGoalPublisher = NetworkTableInstance.getDefault().getBooleanTopic("/RBR/Elevator/AtGoal")
             .publish();
+    private StringPublisher goalVerticalPositionPublisher = NetworkTableInstance.getDefault()
+            .getStringTopic("/RBR/Elevator/Height/Target").publish();
     private DoublePublisher currentHeightPublisher = NetworkTableInstance.getDefault()
             .getDoubleTopic("/RBR/Elevator/Height/Current").publish();
     private DoublePublisher goalHeightPublisher = NetworkTableInstance.getDefault()
@@ -106,7 +116,8 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
             Constants.Elevator.kElevatorKp,
             Constants.Elevator.kElevatorKi,
             Constants.Elevator.kElevatorKd,
-            new TrapezoidProfile.Constraints(2.45, 2.45));
+            new TrapezoidProfile.Constraints(3.5, 3.0));
+            // new TrapezoidProfile.Constraints(2.45, 2.45));
 
     private Mechanism2d m_mech2d = new Mechanism2d(20, 50);
     private MechanismRoot2d m_mech2dRoot = m_mech2d.getRoot("Elevator Root", 10, 0);
@@ -129,7 +140,7 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
     }
 
     public Elevator() {
-        this.desiredVerticalPosition = ElevatorVerticalPosition.L1;
+        debugAlert.set(true);
 
         leftMotor = new SparkMax(Constants.CanID.ELEVATOR_LEFT_MOTOR, MotorType.kBrushless);
         SparkMaxConfig leftMotorConfig = getVerticalMotorLeaderConfig(false, Constants.Elevator.kElevatorKp,
@@ -143,8 +154,9 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         rightMotor.configure(followerConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         rightEncoder = rightMotor.getEncoder();
 
-        // this assumes the elevator is at the bottom and tilted inwards (inside robot
-        // frame) when the robot is powered on
+        // this assumes the elevator is at the bottom and tilted inwards (inside robot frame) when the robot is powered on
+        desiredVerticalPosition = ElevatorVerticalPosition.L1;
+        atGoal = true;
         resetVerticalElevatorEncoders();
 
         if (Robot.isSimulation()) {
@@ -191,12 +203,15 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         m_elevatorMech2d.setLength(verticalEncoderSim.getPosition());
     }
 
-    @Override
-    public void periodic() {
-        // update state
+    private void updateTelemetry() {
         leftMotorOutputCurrentAmps = leftMotor.getOutputCurrent();
         leftMotorEncoderPosition = leftEncoder.getPosition();
         leftMotorEncoderVelocity = leftEncoder.getVelocity();
+
+        // if (trackCurrentThreshold) {
+        //     outputCurrentThresholdTracker.addReading(leftMotorOutputCurrentAmps);
+        //     debugAlert.setText(outputCurrentThresholdTracker.describeResult(outputCurrentThresholdTracker.getResult()));
+        // }
 
         // publish state to NT
         leftMotorOutputCurrentPublisher.set(leftMotorOutputCurrentAmps);
@@ -205,13 +220,14 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
 
         currentHeight = getHeight();
 
-        stallDetected = stallDetectionDebouncer.calculate(leftMotorOutputCurrentAmps > 20);
+        stallDetected = stallDetectionDebouncer.calculate(leftMotorOutputCurrentAmps >= Constants.Elevator.VERTICAL_CURRENT_SPIKE_THRESHOLD);
 
         currentHeightPublisher.set(currentHeight);
         goalHeightPublisher.set(goalHeight);
         goalHeightUpperPublisher.set(goalHeightUpperBound);
         goalHeightLowerPublisher.set(goalHeightLowerBound);
         atGoalPublisher.set(atGoal);
+        goalVerticalPositionPublisher.set(desiredVerticalPosition.name());
 
         if (currentHeight >= goalHeightLowerBound && currentHeight <= goalHeightUpperBound) {
             atGoal = true;
@@ -252,6 +268,25 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         }
     }
 
+    @Override
+    public void periodic() {
+        //actively maintain position unless we're trying to reach L1 and already at the goal
+        if (motorRunMode == MotorRunMode.POSITION_CONTROL) {
+            if (!atGoal) {
+                double pidOutput = verticalProfiledPidController.calculate(leftEncoder.getPosition());
+                double feedforwardOutput = verticalFeedForward.calculate(verticalProfiledPidController.getSetpoint().velocity);
+                leftMotor.setVoltage(pidOutput + feedforwardOutput);
+            } 
+            
+            if (atGoal && desiredVerticalPosition == ElevatorVerticalPosition.L1) {
+                leftMotor.stopMotor();
+            }
+        }
+
+        // update state
+        updateTelemetry();
+    }
+
     public Trigger readyToEjectCoral() {
         return readyToEjectCoral;
     }
@@ -260,37 +295,47 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         return getSetVerticalGoalCommand(ElevatorVerticalPosition.L2);
     }
 
-    public Command elevatorBottomCommand() {
-        return getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).until(() -> atGoal);
-    }
-
     public Command elevatorForceL1AndResetEncodersCommand() {
         return this.run(() -> {
-            this.desiredVerticalPosition = ElevatorVerticalPosition.L1;
-            runVerticalSpeed(-0.45);  //this speed is just a guess
+            trackCurrentThreshold = true;
+            desiredVerticalPosition = ElevatorVerticalPosition.L1;
+            motorRunMode = MotorRunMode.DUTY_CYCLE;
+            atGoal = false;
+            runVerticalSpeed(-0.5);
         }).until(
             () -> stallDetected
         ).andThen(
             () -> {
+                atGoal = true;
+                trackCurrentThreshold = false;
                 runVerticalSpeed(0.0);
+                motorRunMode = MotorRunMode.POSITION_CONTROL;
             }
-        ).andThen(Commands.waitSeconds(0.25))
+        ).andThen(Commands.waitSeconds(0.1))
         .andThen(
             () -> resetVerticalElevatorEncoders()
         );
     }
 
     public Command getSetVerticalGoalCommand(ElevatorVerticalPosition goalPosition) {
-        return run(() -> runToTargetHeight(goalPosition));
+        return startEnd(
+            () -> initializeTargetHeight(goalPosition),
+            () -> {}
+        );
     }
 
-    private void runToTargetHeight(ElevatorVerticalPosition goalPosition) {
-        this.desiredVerticalPosition = goalPosition;
+    public void initializeTargetHeight(ElevatorVerticalPosition goalPosition) {
+        motorRunMode = MotorRunMode.POSITION_CONTROL;
+
+        if (goalPosition != desiredVerticalPosition) {
+            desiredVerticalPosition = goalPosition;
+            atGoal = false;
+        }
 
         //Reduce speed to 75% when the elevator is up
         switch (desiredVerticalPosition) {
             case L1 : 
-                RobotContainer.setMaxSpeedFactor(1.0);
+                RobotContainer.setMaxSpeedFactor(Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR);
                 break;
             case L2 :
                 RobotContainer.setMaxSpeedFactor(0.75);
@@ -301,11 +346,10 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         }
 
         double goalInMeters = elevatorPositionToSetpointMeters.get(goalPosition);
-        this.goalHeight = goalInMeters;
-        this.atGoal = false;
+        goalHeight = goalInMeters;
         goalHeightUpperBound = goalHeight + Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
         goalHeightLowerBound = goalHeight - Constants.Elevator.GOAL_DISTANCE_TOLERANCE;
-        reachVerticalGoal(goalInMeters);
+        verticalProfiledPidController.setGoal(goalInMeters);
     }
 
     private SparkMaxConfig getVerticalMotorLeaderConfig(boolean invert, double kP, double kI, double kD) {
@@ -343,18 +387,6 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         return leftEncoder.getPosition();
     }
 
-    /**
-     * Run control loop to reach and maintain vertical goal.
-     *
-     * @param goal the position to maintain (in meters)
-     */
-    private void reachVerticalGoal(double goalInMeters) {
-        verticalProfiledPidController.setGoal(goalInMeters);
-        double pidOutput = verticalProfiledPidController.calculate(leftEncoder.getPosition());
-        double feedforwardOutput = verticalFeedForward.calculate(verticalProfiledPidController.getSetpoint().velocity);
-        leftMotor.setVoltage(pidOutput + feedforwardOutput);
-    }
-
     public Command runVerticalSpeedCommand(DoubleSupplier speedSupplier) {
         return this.run(() -> runVerticalSpeed(speedSupplier.getAsDouble()));
     }
@@ -363,18 +395,20 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
         leftMotor.set(speed);
     }
 
-    private void resetVerticalElevatorEncoders() {
+    public void resetVerticalElevatorEncoders() {
+        verticalProfiledPidController.reset(0.0);
         verticalProfiledPidController.setGoal(0.0);
         leftEncoder.setPosition(0.0);
         rightEncoder.setPosition(0.0);
+        atGoal = true;
     }
 
     public ElevatorVerticalPosition getDesiredVerticalPosition() {
         return desiredVerticalPosition;
     }
 
-    public void setDesiredVerticalPosition(ElevatorVerticalPosition desiredVerticalPosition) {
-        this.desiredVerticalPosition = desiredVerticalPosition;
+    public boolean isAtGoal() {
+        return atGoal;
     }
 
     @Override
