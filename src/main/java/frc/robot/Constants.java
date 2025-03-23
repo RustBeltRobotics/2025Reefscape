@@ -55,7 +55,7 @@ public final class Constants {
     public static final double FIELD_POSE_XY_ERROR_MARGIN_METERS = Units.inchesToMeters(1.0);
     public static final double FIELD_POSE_THETA_ERROR_MARGIN_RADIANS = Units.degreesToRadians(2.0);
     //Note: this should be set to false for testing the the RBR Lab
-    public static final boolean IS_COMPETITION = true;
+    public static final boolean IS_COMPETITION = false;
   }
 
   /**
@@ -104,6 +104,9 @@ public final class Constants {
    * Robot physical constraints (max velocity, max angular velocity, SwerveDriveKinematics, etc.)
    */
   public static final class Kinematics {
+
+    /* Initial / max speed multiplier for drivetrain - reduce to slow drivings */
+    public static final double INITIAL_DRIVE_MAX_SPEED_FACTOR = 0.93;
 
     /* Robot mass in Kg. */
     public static final double MASS = Units.lbsToKilograms(106.0); //Note: this weight includes the battery (but no bumpers)
@@ -238,7 +241,7 @@ public final class Constants {
 
     public static final double kMinElevatorHeightMeters = 0.0;
     // public static final double kMaxElevatorHeightMeters = Units.inchesToMeters(27.0);  (27" * 2 for the cascade)
-    public static final double kMaxElevatorHeightMeters = Units.inchesToMeters(54.0); // ~ 1.3716 meterss
+    public static final double kMaxElevatorHeightMeters = Units.inchesToMeters(56.0); // ~ 1.4224 meters
 
     public static final double kTiltGearing = 75.0;  //reduction
 
@@ -248,7 +251,7 @@ public final class Constants {
     public static final double LAB_POSITION_HIGH_ALGAE = Units.inchesToMeters(15.0);
     public static final double LAB_POSITION_L3 = Units.inchesToMeters(20.0);
     public static final double LAB_POSITION_L4 = Units.inchesToMeters(46.5); //was 48
-    public static final double LAB_POSITION_BARGE = Units.inchesToMeters(54.0);
+    public static final double LAB_POSITION_BARGE = Units.inchesToMeters(56.0);
 
     //Elevator height setpoints for running on competition field
     public static final double COMPETITION_POSITION_L1 = Units.inchesToMeters(0.0);
@@ -267,11 +270,14 @@ public final class Constants {
     public static final double POSITION_BARGE = Game.IS_COMPETITION ? COMPETITION_POSITION_BARGE : LAB_POSITION_BARGE;
 
     //tolerable error distance in meters (i.e. is the current height close enough to the goal?)
-    public static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(0.25);
+    public static final double GOAL_DISTANCE_TOLERANCE = Units.inchesToMeters(0.125); // 1/8 of an inch  
+
+    public static final double VERTICAL_CURRENT_SPIKE_DEBOUNCE_MIN_SECONDS = 0.25; 
+    public static final double VERTICAL_CURRENT_SPIKE_THRESHOLD = 20.0; //Amps
 
     //percentage at which to run the tilt motor
     public static final double TILT_MOTOR_IN_SPEED = 0.4;
-    public static final double TILT_MOTOR_OUT_SPEED = 0.8;
+    public static final double TILT_MOTOR_OUT_SPEED = 0.9;
     //anything below this velocity we will consider the tilt motor to be not moving (for stall condition detection)
     public static final double TILT_MOTOR_MINIMUM_VELOCITY_THRESHOLD = 0.05;
 

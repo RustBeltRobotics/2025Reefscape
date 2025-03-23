@@ -28,6 +28,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathfindingCommand;
 
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -46,7 +48,7 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
 
   // For limiting maximum speed (1.0 = 100% - full speed)
-  private static double MAX_SPEED_FACTOR = 0.8;
+  private static double MAX_SPEED_FACTOR = Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR;
 
   private final CommandXboxController driverController = new CommandXboxController(Constants.DriverStation.CONTROLLER_PORT_DRIVER);
   private final CommandXboxController operatorController = new CommandXboxController(Constants.DriverStation.CONTROLLER_PORT_OPERATOR);
@@ -64,6 +66,8 @@ public class RobotContainer {
     
   private final SendableChooser<Command> autoChooser;
   private final SendableChooser<Double> driveTrainSpeedChooser = new SendableChooser<>();
+  private DoublePublisher maxSpeedFactorPublisher = NetworkTableInstance.getDefault().getDoubleTopic("/RBR/MaxSpeed").publish();
+
 
   /** The container for the robot. Contains subsystems, IO devices, and commands. */
   public RobotContainer() {
@@ -71,7 +75,7 @@ public class RobotContainer {
     
     autoChooser = AutoBuilder.buildAutoChooser();
 
-    driveTrainSpeedChooser.setDefaultOption("100%", 1.0);
+    driveTrainSpeedChooser.setDefaultOption(MAX_SPEED_FACTOR + "%", MAX_SPEED_FACTOR);
     driveTrainSpeedChooser.addOption("75%", 0.75);
     driveTrainSpeedChooser.addOption("50%", 0.5);
     driveTrainSpeedChooser.addOption("25%", 0.25);
@@ -122,17 +126,19 @@ public class RobotContainer {
     NamedCommands.registerCommand("reef-auto-score-left", leftSideAutoAlignReefScoreComand);
     NamedCommands.registerCommand("reef-auto-score-right", rightSideAutoAlignReefScoreComand);
 
+    NamedCommands.registerCommand("reset-pose-using-vision", drivetrain.resetPoseUsingVisionCommand());
     NamedCommands.registerCommand("elevator-tilt-out", tiltOutCommand);
     NamedCommands.registerCommand("elevator-tilt-in", tiltInCommand);
     NamedCommands.registerCommand("coral-outtake", rejector.getElevatorHeightBasedOuttakeCommand(elevator).withTimeout(0.5));
-    NamedCommands.registerCommand("algae-intake", rejector.getOuttakeCommand().withTimeout(2.5));
+    NamedCommands.registerCommand("algae-intake", rejector.getOuttakeCommand().withTimeout(1.0));
+    NamedCommands.registerCommand("algae-intake-long", rejector.getOuttakeCommand().withTimeout(3.0));
     NamedCommands.registerCommand("algae-outtake", rejector.getIntakeCommand().withTimeout(1.5));
     NamedCommands.registerCommand("elevator-l1", elevatorL1Command);
     NamedCommands.registerCommand("elevator-high-algae", elevatorHighAlgaeCommand);
     NamedCommands.registerCommand("elevator-l4", elevatorL4Command);
     NamedCommands.registerCommand("elevator-barge", elevatorBargeCommand);
     NamedCommands.registerCommand("elevator-barge-wait", Commands.waitSeconds(1.0));
-    NamedCommands.registerCommand("coral-station-wait", Commands.waitSeconds(2.5));
+    NamedCommands.registerCommand("coral-station-wait", Commands.waitSeconds(0.75));
     NamedCommands.registerCommand("grab-high-algae", Commands.race(rejector.getOuttakeCommand().withTimeout(2.5), elevatorHighAlgaeCommand));
     //when driving away from the reef after obtaining a high algae, lower the elevator
     // new EventTrigger("leaving-high-algae").onTrue(elevatorL1Command);
@@ -164,26 +170,26 @@ public class RobotContainer {
     // RobotOrientedDriveCommand robotOrientedDriveCommand = new RobotOrientedDriveCommand(drivetrain, driverTranslationXSupplier, driverTranslationYSupplier, driverRotationSupplier);
     // driverController.leftTrigger().whileTrue(robotOrientedDriveCommand);
 
-    //while either trigger is help, increase max speed to 100%, otherwise run at default 80% max speed
+    //while either trigger is help, increase max speed to 100%, otherwise run at default/initial max speed
     driverController.leftTrigger().whileTrue(Commands.runEnd(
       () -> RobotContainer.MAX_SPEED_FACTOR = 1.0,
-      () -> RobotContainer.MAX_SPEED_FACTOR = 0.8
+      () -> RobotContainer.MAX_SPEED_FACTOR = Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR
     ));
     driverController.rightTrigger().whileTrue(Commands.runEnd(
       () -> RobotContainer.MAX_SPEED_FACTOR = 1.0,
-      () -> RobotContainer.MAX_SPEED_FACTOR = 0.8
+      () -> RobotContainer.MAX_SPEED_FACTOR = Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR
     ));
 
-    //Start button forces elevator to bottom and then resets controllersutttfvvv6
-    driverController.start().onTrue(elevator.elevatorForceL1AndResetEncodersCommand());
+    //Start button forces elevator to bottom and then resets controllers
+    driverController.start().onTrue(elevator.elevatorForceL1AndResetEncodersCommand().withName("forceL1AndResetEncoders"));
 
     // Pressing X button rotates swerve wheels 45 degrees
     // TODO: remove this, it's only intended for swerve rotation PID tuning/testing!
-    driverController.x().whileTrue(drivetrain.rotateWheels45DegreesCommand().withName("RotateWheels45"));
-    driverController.x().onFalse(Commands.runOnce(() -> drivetrain.setWheelRotationPidTesting(false), drivetrain));
+    // driverController.x().whileTrue(drivetrain.rotateWheels45DegreesCommand().withName("RotateWheels45"));
+    // driverController.x().onFalse(Commands.runOnce(() -> drivetrain.setWheelRotationPidTesting(false), drivetrain));
 
-    driverController.povUp().whileTrue(climber.climbCommand());
-    driverController.back().whileTrue(climber.descendCommand());
+    driverController.povUp().whileTrue(climber.climbCommand().withName("ClimbUp"));
+    driverController.back().whileTrue(climber.descendCommand().withName("ClimbDown"));
     // Pressing Down on the D-pad of driver controller will zero/reset vertical motor encoders of the elevator
     driverController.povDown().onTrue(elevator.resetEncodersCommand().withName("ResetElevatorEncoders"));
 
@@ -224,7 +230,7 @@ public class RobotContainer {
     //Pressing Down on the D-pad runs the avoid tipping command sequence: 
     // 1. Moves elevator to bottom position and tilts it in (if it is at a safe height to tilt in)
     // 2. Tilts the elevator back out a half second after completing #1 above
-    Command avoidTippingCommand = Commands.parallel(elevator.elevatorBottomCommand(), elevatorTiltMechanism.tipAvoidanceTiltCommand())
+    Command avoidTippingCommand = Commands.parallel(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1), elevatorTiltMechanism.tipAvoidanceTiltCommand())
       .andThen(Commands.waitSeconds(0.5))
       .andThen(elevatorTiltMechanism.tiltOutCommand())
       .withName("AvoidTipping");
@@ -339,6 +345,10 @@ public class RobotContainer {
 
   public Elevator getElevator() {
     return elevator;
+  }
+
+  public void updateTelemetry() {
+    maxSpeedFactorPublisher.set(MAX_SPEED_FACTOR);
   }
 
   public static void setMaxSpeedFactor(double newSpeedFactor) {

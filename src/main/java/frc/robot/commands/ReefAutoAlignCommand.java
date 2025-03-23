@@ -20,7 +20,8 @@ public class ReefAutoAlignCommand extends Command {
     private static final double TOTAL_DISTANCE_CUTOFF = Units.inchesToMeters(16.0);
 
     //Speed to move sideways in m/s (12 inches per second)
-    private static final double STRAFE_VELOCITY = 0.3048;
+    // private static final double STRAFE_VELOCITY = 0.3048;
+    private static final double STRAFE_VELOCITY = 0.5048;
 
     private final Drivetrain drivetrain;
     private final Trigger leftSensorTrigger;
@@ -45,6 +46,7 @@ public class ReefAutoAlignCommand extends Command {
     @Override
     public void initialize() {
         initialOdometryPose = drivetrain.getSwerveOdometryPose();
+        DataLogManager.log("RBR: " + getClass().getSimpleName() + " - initialize()");
     }
 
     /**
@@ -80,6 +82,7 @@ public class ReefAutoAlignCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
+        debugAlert.setText(debugAlert.getText() + " - ended: interrupted = " + interrupted);
         //stop drivetrain movement
         drivetrain.drive(new ChassisSpeeds(0, 0, 0));
     }

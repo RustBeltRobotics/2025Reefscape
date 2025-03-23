@@ -100,6 +100,7 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().run();
     timeEntry.setDouble(DriverStation.getMatchTime()); // Update the time left in shuffleboard
     powerManagement.updateTelemetry(); //check for brownouts and breaker faults on the PDH
+    robotContainer.updateTelemetry();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
@@ -139,10 +140,9 @@ public class Robot extends TimedRobot {
       autonomousCommand.cancel();
     }
 
-    robotContainer.getElevator().setDesiredVerticalPosition(ElevatorVerticalPosition.L1);
-
     //Do not use vision / AprilTag readings to update odometry during tele-op
     robotContainer.getDrivetrain().setShouldUseVision(false);
+    robotContainer.getElevator().resetVerticalElevatorEncoders();
   }
 
   /** This function is called periodically during operator control. */
