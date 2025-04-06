@@ -338,7 +338,8 @@ public class Elevator extends SubsystemBase implements AutoCloseable {
                 RobotContainer.setMaxSpeedFactor(Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR);
                 break;
             case L2 :
-                RobotContainer.setMaxSpeedFactor(0.75);
+                // RobotContainer.setMaxSpeedFactor(0.75);
+                RobotContainer.setMaxSpeedFactor(Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR);
                 break;
             default:
                 RobotContainer.setMaxSpeedFactor(0.5);
