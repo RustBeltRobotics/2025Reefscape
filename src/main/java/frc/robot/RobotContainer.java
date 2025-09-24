@@ -162,23 +162,47 @@ public class RobotContainer {
   private void configureBindings() {
     //DRIVER bindings
     // Pressing A button sets forward direction to current robot heading
-    driverController.a().onTrue(drivetrain.zeroPoseEstimatorAngleCommand().withName("ZeroPoseEstimatorAngle"));
+    // driverController.a().onTrue(drivetrain.zeroPoseEstimatorAngleCommand().withName("ZeroPoseEstimatorAngle"));
+
     // Pressing B button will reset the pose estimator's current position using the first April Tag reading it sees
-    driverController.b().onTrue(drivetrain.resetPoseUsingVisionCommand().withName("ResetPoseUsingVision"));
+    // driverController.b().onTrue(drivetrain.resetPoseUsingVisionCommand().withName("ResetPoseUsingVision"));
+
+    //Pressing A button moves elevator to L2 setpoint to score coral
+    driverController.a().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L2).withName("ElevatorL2"));
+    //Pressing B button moves elevator to L3 setpoint to score coral
+    driverController.b().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L3).withName("ElevatorL3"));
+    //Pressing X button moves elevator to L1 (bottom) setpoint to score coral
+    driverController.x().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L1).withName("ElevatorL1"));
+    //Pressing Y button moves elevator to L4 setpoint to score coral
+    driverController.y().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4).withName("ElevatorL4"));
+    //Pressing R bumper moves elevator to barge net score position
+    Command bargeHeightCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.BARGE).withName("ElevatorBarge");
+    driverController.rightBumper().onTrue(bargeHeightCommand);
+    //Pressing L Bumper moves elevator to new setpoint for high algae on reef - (L3 level - 4 inches)
+    driverController.leftBumper().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE).withName("ElevatorHighAlgae"));
+
+    //Pressing Right Trigger performs outtake
+    driverController.rightTrigger().whileTrue(rejector.getOuttakeCommand().withName("Outtake"));
+    //Pressing Left Trigger performs intake
+    driverController.leftTrigger().whileTrue(rejector.getIntakeCommand().withName("Intake"));
+    //driverController Left on the D-pad tilts elevator in to the robot frame
+    driverController.povLeft().onTrue(elevatorTiltMechanism.tiltInCommand().withName("TiltIn"));
+    //Pressing Right on the D-pad tilts elevator out to the fully vertical position
+    driverController.povRight().onTrue(elevatorTiltMechanism.tiltOutCommand().withName("TiltOut"));
 
     //Drive in robot oriented mode while the left trigger is held
     // RobotOrientedDriveCommand robotOrientedDriveCommand = new RobotOrientedDriveCommand(drivetrain, driverTranslationXSupplier, driverTranslationYSupplier, driverRotationSupplier);
     // driverController.leftTrigger().whileTrue(robotOrientedDriveCommand);
 
-    //while either trigger is help, increase max speed to 100%, otherwise run at default/initial max speed
-    driverController.leftTrigger().whileTrue(Commands.runEnd(
-      () -> RobotContainer.MAX_SPEED_FACTOR = 1.0,
-      () -> RobotContainer.MAX_SPEED_FACTOR = Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR
-    ));
-    driverController.rightTrigger().whileTrue(Commands.runEnd(
-      () -> RobotContainer.MAX_SPEED_FACTOR = 1.0,
-      () -> RobotContainer.MAX_SPEED_FACTOR = Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR
-    ));
+    //while either trigger is held, increase max speed to 100%, otherwise run at default/initial max speed
+    // driverController.leftTrigger().whileTrue(Commands.runEnd(
+    //   () -> RobotContainer.MAX_SPEED_FACTOR = 1.0,
+    //   () -> RobotContainer.MAX_SPEED_FACTOR = Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR
+    // ));
+    // driverController.rightTrigger().whileTrue(Commands.runEnd(
+    //   () -> RobotContainer.MAX_SPEED_FACTOR = 1.0,
+    //   () -> RobotContainer.MAX_SPEED_FACTOR = Constants.Kinematics.INITIAL_DRIVE_MAX_SPEED_FACTOR
+    // ));
 
     //Start button forces elevator to bottom and then resets controllers
     driverController.start().onTrue(elevator.elevatorForceL1AndResetEncodersCommand().withName("forceL1AndResetEncoders"));
@@ -189,14 +213,17 @@ public class RobotContainer {
     // driverController.x().onFalse(Commands.runOnce(() -> drivetrain.setWheelRotationPidTesting(false), drivetrain));
 
     driverController.povUp().whileTrue(climber.climbCommand().withName("ClimbUp"));
-    driverController.back().whileTrue(climber.descendCommand().withName("ClimbDown"));
+    // driverController.back().whileTrue(climber.descendCommand().withName("ClimbDown"));
+    driverController.back().onTrue(drivetrain.zeroPoseEstimatorAngleCommand().withName("ZeroPoseEstimatorAngle"));
+
     // Pressing Down on the D-pad of driver controller will zero/reset vertical motor encoders of the elevator
-    driverController.povDown().onTrue(elevator.resetEncodersCommand().withName("ResetElevatorEncoders"));
+    // driverController.povDown().onTrue(elevator.resetEncodersCommand().withName("ResetElevatorEncoders"));
+    driverController.povDown().whileTrue(climber.descendCommand().withName("ClimbDown"));
 
     //Stop drivetrain / cancel auto-reef align command when pressing L or R on the driver D-pad
     StopDrivetrainCommand stopDrivetrainCommand = new StopDrivetrainCommand(drivetrain);
-    driverController.povLeft().onTrue(stopDrivetrainCommand);
-    driverController.povRight().onTrue(stopDrivetrainCommand);
+    // driverController.povLeft().onTrue(stopDrivetrainCommand);
+    // driverController.povRight().onTrue(stopDrivetrainCommand);
 
     //Test color LEDs when driver bumpers are held
     // driverController.leftBumper().whileTrue(led.setLedColorCommand(Color.kRed).withName("LedColorRed"));
@@ -222,7 +249,6 @@ public class RobotContainer {
     //Pressing Y button moves elevator to L4 setpoint to score coral
     operatorController.y().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.L4).withName("ElevatorL4"));
     //Pressing R bumper moves elevator to barge net score position
-    Command bargeHeightCommand = elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.BARGE).withName("ElevatorBarge");
     operatorController.rightBumper().onTrue(bargeHeightCommand);
     //Pressing L Bumper moves elevator to new setpoint for high algae on reef - (L3 level - 4 inches)
     operatorController.leftBumper().onTrue(elevator.getSetVerticalGoalCommand(ElevatorVerticalPosition.HIGH_ALGAE).withName("ElevatorHighAlgae"));
@@ -241,9 +267,9 @@ public class RobotContainer {
     //Pressing Left Trigger performs intake
     operatorController.leftTrigger().whileTrue(rejector.getIntakeCommand().withName("Intake"));
     //Pressing Left on the D-pad tilts elevator in to the robot frame
-    operatorController.povLeft().onTrue(elevatorTiltMechanism.tiltInCommand().withName("TiltOut"));
+    operatorController.povLeft().onTrue(elevatorTiltMechanism.tiltInCommand().withName("TiltIn"));
     //Pressing Right on the D-pad tilts elevator out to the fully vertical position
-    operatorController.povRight().onTrue(elevatorTiltMechanism.tiltOutCommand().withName("TiltIn"));
+    operatorController.povRight().onTrue(elevatorTiltMechanism.tiltOutCommand().withName("TiltOut"));
     //Pressing Start button moves the coral out slightly to make reef alignment easier
     operatorController.start().onTrue(rejector.getOuttakeCommand().withTimeout(0.05).withName("CoralEdge"));
     operatorController.back().whileTrue(climber.descendCommand());
